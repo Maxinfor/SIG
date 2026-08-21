@@ -2,7 +2,8 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Sistema de Gestão - Conselho Tutelar</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão - Conselho Tutelar do Paranoá</title>
     <!-- Biblioteca SheetJS para leitura de arquivos Excel (.xlsx) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- FontAwesome para Ícones -->
@@ -131,7 +132,7 @@
         .form-group { 
             display: flex; 
             flex-direction: column; 
-            position: relative; /* Necessário para o autocomplete */
+            position: relative;
         }
 
         .form-group label { 
@@ -807,228 +808,43 @@
     </div>
 
     <script>
-        // ========================================================================
-        // 1. LISTA COMPLETA DE ASSUNTOS FORNECIDA
-        // ========================================================================
-        const listaAssuntosCompleta = [
-            "Negligência: Abandono de Incapaz",
-            "Negligência: Abandono Intelectual",
-            "Neglicência: Abandono Material",
-            "Negligência: Atividade doméstica",
-            "Negligência: Atos atentórios ao Exercício da cidadania",
-            "Negligência: Certidão de Nascimento",
-            "Negligência: Certidão de óbito",
-            "Negligência: Cultura / Esporte / Lazer",
-            "Negligência: Educação",
-            "Negligência: Evasão Escolar",
-            "Negligência: Fuga do Lar",
-            "Negligência: Negação do Direito á liberdade e á expressão",
-            "Negligência: em Alimentação",
-            "Negligência: Negligência em Amparo e Responsabilização",
-            "Negligência: em Assistência à saúde",
-            "Negligência: Privação ou Dificuldade de Convívio / Conflito Familiar",
-            "Negligência: Necessidades Especiais",
-            "Negligência: Não cumprimento de decisão judicial Transitada em Julgada",
-            "Negligência: Restrição ao direito de Ir e Vir",
-            "Negligência: Violações à Dignidade e ao Respeito",
-            "Negligência: Veículo / trânsito",
-            "Negligência: Saúde",
-            "VIOLÊNCIA PSICOLÓGICA",
-            "Violência Psicológica: Alienação Parental",
-            "Violência Psicológica: Ameaça",
-            "Violência Psicológica: Calúnia",
-            "Violência Psicológica: Chantagem",
-            "Violência Psicológica: Difamação",
-            "Violência Psicológica: Humilhação",
-            "Violência Psicológica: Injúria",
-            "Violência Psicológica: Violência Doméstica no âmbito Familiar",
-            "VIOLÊNCIA FÍSICA",
-            "Violência Física: Homicídio",
-            "Violência Física: Indução ao Suicídio",
-            "Violência Física: Lesão Corporal",
-            "Violência Física: Maus Tratos",
-            "Violência Física: Tentativa de Homicídio",
-            "VIOLÊNCIA SEXUAL",
-            "Violência Sexual: Abuso Sexual",
-            "Violência Sexual: Estupro",
-            "Violência Sexual: Estupro de Vulnerável",
-            "Violência Sexual: Exploração Sexual",
-            "VIOLÊNCIA INSTITUCIONAL",
-            "Violência Institucional: Abuso de autoridade",
-            "Violência Institucional: Ausência de programas e ações específicas para aplicação de medidas de proteção",
-            "Violência Institucional: Assédio Moral",
-            "Violência Institucional: Assédio Sexual",
-            "Violência Institucional: Atos atentórios ao direito de Educação",
-            "Violência Institucional: Atos atentórios ao exercício de cidadania",
-            "Violência Institucional: Assistência Social-Regularização Cadastro",
-            "Violência Institucional: Assistência Social-Inclusão em Projetos Sociais",
-            "Violência Institucional: Encaminham.à Gerência de Meio Aberto- Proc. existente de Medida Sócioeducativa",
-            "Violência Institucional: Encaminham.ao P. Judic. Regularização de guarda/visita ou com Trânsito em Julgado",
-            "Violência Institucional: Falta de condições educacionais adequadas",
-            "Violência Institucional: Impedimento de Permanência no Sistema Escolar",
-            "Violência Institucional: Indisponibilidade de acesso a Cultura, Esporte e Lazer",
-            "Violência Institucional: Indisponibilidade de acesso ao Ensino Fundamental ( 6 a 14 anos)",
-            "Violência Institucional: Indisponibilidade de acesso ao Ensino Médio (15 a 17 anos)",
-            "Violência Institucional: Indisponib./ Não acesso á Capacitação /Formação/Técnico/Profissional do aprendiz",
-            "Violência Institucional: Indisponibilidade de vaga em Creche e Pré-Escola às crianças de 0 a 5 anos de idade",
-            "Violência Institucional: Inexistência/ Impedimento de uso / Indisponibilidade de Transporte",
-            "Violência Institucional: Inexistência/ Impedimento de uso de Equipamento para Cultura, Esporte e Lazer",
-            "Violência Institucional: Não atendimento em saúde",
-            "Violência Institucional: Omissão",
-            "Violência Institucional: Requisição de Certidão de Nascimento",
-            "Violência Institucional: Requisição de Certidão de Óbito",
-            "Violência Institucional: Medida de Proteção /Requisição de Serviço Público área de segurança",
-            "Violência Institucional: Medida de Proteção /Requisição de Serviço Público Previdência e trabalho",
-            "Violência Institucional: Medida de Proteção /Requisição de Serviço Público Psicológico",
-            "Violência Institucional: Medida de Proteção /Requisição de Serviço Público Psiquiátrico",
-            "Violência Institucional: Necessidades Especiais",
-            "Violência Institucional: Negação do Direito à liberdade e Expressão",
-            "Violência Institucional: Tortura, Tratamento Cruel e Degradante",
-            "Violência Institucional: Violência Policial",
-            "TRABALHO INFANTIL",
-            "Trabalho Infantil: Âmbito Doméstico",
-            "Trabalho Infantil: Âmbito Rural",
-            "Trabalho Infantil: Atividades Informais",
-            "Trabalho Infantil: Condições Impróprias de remuneração ou Imposição de trabalo ao Adolescente",
-            "Trabalho Infantil: Condições Irregulares de Trabalho",
-            "Trabalho Infantil: Exploração Sexual",
-            "Trabalho Infantil: Inexistência ou Insuficiência de Condições para Formação Técnica e profissional",
-            "Trabalho Infantil: Submissão de Crianças/adolescentes à atividade Ilícita ou Contravenções Sociais",
-            "DISCRIMINAÇÃO",
-            "Discriminação - Por Compleição Física",
-            "Discriminação - Por Crença Religiosa",
-            "Discriminação - Por Deficiência",
-            "Discriminação - Por Identidade de Gênero",
-            "Discriminação - Por Orientação Sexual",
-            "Discriminação - Racial",
-            "VIOLÊNCIA ONLINE",
-            "Violência Online - Aliciamento Sexual Infantil Online",
-            "Violência Online - Apologia e Incitação à Crimes",
-            "Violência Online - Calúnia/ Difamação / Injúria",
-            "Violência Online - Cyberbullying",
-            "Violência Online - Pornografia",
-            "Violência Online – Racismo",
-            "AUTOAGRESSÃO",
-            "Autoagressão - Automutilação",
-            "Autoagressão - Suicídio",
-            "Autoagressão - Tentativa de Suicídio",
-            "TRÁFICO DE PESSOAS",
-            "Tráfico de Pessoas - Para Fins de Adoção Ilegal",
-            "Tráfico de Pessoas - Para Fins de Exploração Sexual",
-            "Tráfico de Pessoas - Para Fins de Remoção de Órgãos",
-            "Tráfico de Pessoas - Para Fins de Trabalho Infantil"
+        // Lista de Assuntos Padrão do Conselho Tutelar
+        const listaAssuntosGerais = [
+            "Abuso Sexual",
+            "Agressão Física / Maus Tratos",
+            "Negligência / Abandono de Incapaz",
+            "Evasão Escolar / Frequência Irregular",
+            "Trabalho Infantil",
+            "Acolhimento Institucional / Abrigo",
+            "Disputa de Guarda / Conflito Familiar",
+            "Uso de Substâncias Psicoativas (Drogas/Álcool)",
+            "Ameaça / Vulnerabilidade Social",
+            "Solicitação de Vaga em Creche / Escola",
+            "Atendimento Psicológico / Saúde",
+            "Medida de Proteção Aplicada",
+            "Orientação Familiar / Visita Domiciliar",
+            "Outros Assuntos Diversos"
         ];
 
-        // ========================================================================
-        // 2. VARIÁVEIS GLOBAIS
-        // ========================================================================
-        let registrosCarregados = [];
-        let atendimentosRegistrados = [];
+        let registros = JSON.parse(localStorage.getItem('ct_registros')) || [];
+        let atendimentos = JSON.parse(localStorage.getItem('ct_atendimentos')) || [];
 
-        // ========================================================================
-        // 3. FUNÇÕES DE PERSISTÊNCIA (LOCAL STORAGE)
-        // ========================================================================
-        function carregarDadosLocalStorage() {
-            try {
-                const dadosProcessos = localStorage.getItem('registrosProcessos');
-                if (dadosProcessos) {
-                    registrosCarregados = JSON.parse(dadosProcessos);
-                }
-                const dadosAtendimentos = localStorage.getItem('atendimentos');
-                if (dadosAtendimentos) {
-                    atendimentosRegistrados = JSON.parse(dadosAtendimentos);
-                }
-            } catch (e) {
-                console.error('Erro ao carregar dados do localStorage:', e);
-            }
-        }
-
-        function salvarDadosLocalStorage() {
-            try {
-                localStorage.setItem('registrosProcessos', JSON.stringify(registrosCarregados));
-                localStorage.setItem('atendimentos', JSON.stringify(atendimentosRegistrados));
-            } catch (e) {
-                console.error('Erro ao salvar dados no localStorage:', e);
-            }
-        }
-
-        // ========================================================================
-        // 4. INICIALIZAÇÃO DA PÁGINA
-        // ========================================================================
-        window.addEventListener('DOMContentLoaded', () => {
-            // Carrega dados do localStorage
-            carregarDadosLocalStorage();
-            
-            const dataAtual = new Date();
-            const mesAtualStr = String(dataAtual.getMonth() + 1).padStart(2, '0');
-            const anoAtualStr = String(dataAtual.getFullYear());
-            
-            const selectMes = document.getElementById('filtroMes');
-            if(selectMes) selectMes.value = mesAtualStr;
-            const selectAno = document.getElementById('filtroAno');
-            if(selectAno) selectAno.value = anoAtualStr;
-            
-            atualizarDataHoraAtual();
-            atualizarTabelaTela(registrosCarregados);
-            atualizarDashboardEAtendimentos();
+        window.onload = function() {
+            carregarTabela();
+            carregarTabelaAtendimentos();
             atualizarDashboardEstatisticas();
+            configurarAutocomplete("assuntoInput", "assuntoAutocompleteList", listaAssuntosGerais);
+            configurarAutocomplete("atendAssuntoInput", "atendAssuntoAutocompleteList", listaAssuntosGerais);
+            
+            // Definir data e hora atual na aba de atendimento
+            const agora = new Date();
+            document.getElementById('spanDataHoje').innerText = agora.toLocaleDateString('pt-BR');
+            document.getElementById('atendDataHora').value = agora.toLocaleString('pt-BR');
+        };
 
-            // Configurar Autocompletes
-            configurarAutocomplete('assuntoInput', 'assuntoAutocompleteList');
-            configurarAutocomplete('atendAssuntoInput', 'atendAssuntoAutocompleteList');
-        });
-
-        // ========================================================================
-        // 5. FUNÇÕES DE AUTCOMPLETE
-        // ========================================================================
-        function configurarAutocomplete(inputId, listId) {
-            const inputEl = document.getElementById(inputId);
-            const listEl = document.getElementById(listId);
-
-            inputEl.addEventListener('input', function() {
-                const val = this.value;
-                listEl.innerHTML = '';
-                if (!val) return;
-
-                const matchVal = val.toLowerCase();
-                let count = 0;
-
-                for (let i = 0; i < listaAssuntosCompleta.length; i++) {
-                    if (listaAssuntosCompleta[i].toLowerCase().includes(matchVal)) {
-                        let itemDiv = document.createElement('div');
-                        
-                        let textoOriginal = listaAssuntosCompleta[i];
-                        let idx = textoOriginal.toLowerCase().indexOf(matchVal);
-                        let textoFormatado = textoOriginal.substring(0, idx) + 
-                            "<strong>" + textoOriginal.substring(idx, idx + matchVal.length) + "</strong>" + 
-                            textoOriginal.substring(idx + matchVal.length);
-
-                        itemDiv.innerHTML = textoFormatado;
-                        itemDiv.addEventListener('click', function() {
-                            inputEl.value = textoOriginal;
-                            listEl.innerHTML = '';
-                        });
-                        listEl.appendChild(itemDiv);
-                        count++;
-                        if (count >= 15) break;
-                    }
-                }
-            });
-
-            document.addEventListener('click', function(e) {
-                if (e.target !== inputEl) {
-                    listEl.innerHTML = '';
-                }
-            });
-        }
-
-        // ========================================================================
-        // 6. FUNÇÕES DE NAVEGAÇÃO E UI
-        // ========================================================================
         function alternarAba(abaId, btnElement) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            
             document.getElementById(abaId).classList.add('active');
             btnElement.classList.add('active');
         }
@@ -1037,7 +853,6 @@
             const wrap = document.getElementById('dashboardContainerWrap');
             const icon = document.getElementById('iconToggleDash');
             const text = document.getElementById('textToggleDash');
-
             if (wrap.style.display === 'none') {
                 wrap.style.display = 'block';
                 icon.className = 'fa-solid fa-eye-slash';
@@ -1049,607 +864,533 @@
             }
         }
 
-        function atualizarDataHoraAtual() {
-            const agora = new Date();
-            const dataFormatada = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR');
-            const inputDH = document.getElementById('atendDataHora');
-            if(inputDH) inputDH.value = dataFormatada;
-            const spanH = document.getElementById('spanDataHoje');
-            if(spanH) spanH.innerText = dataFormatada;
-        }
-        setInterval(atualizarDataHoraAtual, 1000);
+        function configurarAutocomplete(inputId, listId, arraySugestoes) {
+            const input = document.getElementById(inputId);
+            const listContainer = document.getElementById(listId);
 
-        function mostrarMensagem(texto) {
-            const box = document.getElementById('statusBox');
-            box.style.display = 'block';
-            box.innerText = texto;
-            setTimeout(() => { box.style.display = 'none'; }, 4000);
-        }
+            input.addEventListener('input', function() {
+                const val = this.value;
+                listContainer.innerHTML = '';
+                if (!val) return;
 
-        // ========================================================================
-        // 7. FUNÇÕES DOS PROCESSOS (ABA 1)
-        // ========================================================================
-        function adicionarCampo(containerId, classeInput, placeholderTexto) {
-            const container = document.getElementById(containerId);
-            const div = document.createElement('div');
-            div.className = 'dynamic-item';
-            div.innerHTML = `<input type="text" class="${classeInput}" placeholder="${placeholderTexto}"><button type="button" class="btn-remove" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>`;
-            container.appendChild(div);
+                arraySugestoes.forEach(item => {
+                    if (item.toLowerCase().includes(val.toLowerCase())) {
+                        const div = document.createElement('div');
+                        div.innerHTML = item.replace(new RegExp(val, 'gi'), match => `<strong>${match}</strong>`);
+                        div.addEventListener('click', function() {
+                            input.value = item;
+                            listContainer.innerHTML = '';
+                        });
+                        listContainer.appendChild(div);
+                    }
+                });
+            });
+
+            document.addEventListener('click', function(e) {
+                if (e.target !== input) {
+                    listContainer.innerHTML = '';
+                }
+            });
         }
 
         function adicionarCampoCrianca() {
             const container = document.getElementById('criancasContainer');
             const div = document.createElement('div');
             div.className = 'dynamic-item';
-            div.innerHTML = `<input type="text" class="nomeCrianca" placeholder="Nome Completo" oninput="calcularPastaAutomatica()"><button type="button" class="btn-remove" onclick="this.parentElement.remove(); calcularPastaAutomatica();"><i class="fa-solid fa-xmark"></i></button>`;
+            div.innerHTML = `
+                <input type="text" class="nomeCrianca" placeholder="Nome Completo" oninput="calcularPastaAutomatica()">
+                <button type="button" class="btn-remove" onclick="removerCampo(this); calcularPastaAutomatica();"><i class="fa-solid fa-trash"></i></button>
+            `;
             container.appendChild(div);
         }
 
-        function obterValoresDinamicos(classeInput) {
-            let valores = [];
-            document.querySelectorAll('.' + classeInput).forEach(input => { if (input.value.trim() !== '') valores.push(input.value.trim()); });
-            return valores.join(', ');
+        function adicionarCampo(containerId, classeInput, placeholderTexto) {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = 'dynamic-item';
+            div.innerHTML = `
+                <input type="text" class="${classeInput}" placeholder="${placeholderTexto}">
+                <button type="button" class="btn-remove" onclick="removerCampo(this)"><i class="fa-solid fa-trash"></i></button>
+            `;
+            container.appendChild(div);
+        }
+
+        function removerCampo(btn) {
+            btn.parentElement.remove();
         }
 
         function calcularPastaAutomatica() {
-            const editIndex = document.getElementById('editIndex').value;
-            if (editIndex !== "-1") return;
+            const inputs = document.querySelectorAll('.nomeCrianca');
+            let primeiroNome = "";
+            for (let input of inputs) {
+                if (input.value.trim() !== "") {
+                    let partes = input.value.trim().split(" ");
+                    primeiroNome = partes[0].toUpperCase();
+                    break;
+                }
+            }
+            document.getElementById('pasta').value = primeiroNome ? `PASTA - ${primeiroNome}` : "";
+        }
 
-            const primeiroInput = document.querySelector('.nomeCrianca');
-            const inputPasta = document.getElementById('pasta');
-            if (!primeiroInput || !primeiroInput.value.trim()) {
-                inputPasta.value = '';
+        function salvarRegistro() {
+            const editIndex = parseInt(document.getElementById('editIndex').value);
+            const pasta = document.getElementById('pasta').value;
+            const numProces = document.getElementById('numProces').value;
+            const dataNasc = document.getElementById('dataNasc').value;
+            const endereco = document.getElementById('endereco').value;
+            const cidade = document.getElementById('cidade').value;
+            const assunto = document.getElementById('assuntoInput').value;
+            const conselheiro = document.getElementById('conselheiro').value;
+            const processoSeiNum = document.getElementById('processoSeiNum').value;
+
+            const criancas = Array.from(document.querySelectorAll('.nomeCrianca')).map(i => i.value.trim()).filter(v => v !== "");
+            const responsaveis = Array.from(document.querySelectorAll('.nomeResponsavel')).map(i => i.value.trim()).filter(v => v !== "");
+
+            if (criancas.length === 0) {
+                alert("Por favor, preencha pelo menos o nome de uma criança/adolescente.");
                 return;
             }
 
-            let nome = primeiroInput.value.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            let letra = nome[0].toUpperCase();
-            if (!/[A-Z]/.test(letra)) letra = 'A';
-
-            let maxNum = 0;
-            registrosCarregados.forEach(item => {
-                if (item.pasta && item.pasta.startsWith(letra + '-')) {
-                    let partes = item.pasta.split('-');
-                    let num = parseInt(partes[1]);
-                    if (!isNaN(num) && num > maxNum) maxNum = num;
-                }
-            });
-
-            inputPasta.value = `${letra}-${maxNum + 1}`;
-        }
-
-        // ========================================================================
-        // 8. IMPORTAÇÃO DE DADOS
-        // ========================================================================
-        function processarPlanilha(event) {
-            const arquivo = event.target.files[0];
-            const leitor = new FileReader();
-            leitor.onload = function(e) {
-                const dadosBinarios = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(dadosBinarios, { type: 'array' });
-                mapearRegistros(XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]));
-            };
-            leitor.readAsArrayBuffer(arquivo);
-        }
-
-        function clicarColar() { executarColagem(document.getElementById('pasteInput').value); }
-        function processarDadosColados(event) { setTimeout(() => { executarColagem(event.target.value); }, 100); }
-
-        function executarColagem(textoColado) {
-            if (!textoColado.trim()) return;
-            const linhas = textoColado.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-            let dadosConvertidos = [];
-            let inicioIndex = (linhas[0].includes('PASTA') || linhas[0].includes('PROCES')) ? 1 : 0;
-            for (let i = inicioIndex; i < linhas.length; i++) {
-                const col = linhas[i].split('\t');
-                dadosConvertidos.push({ numProces: col[1]||'', nomeCrianca: col[2]||'', dataNasc: col[3]||'', nomeResponsavel: col[4]||'', endereco: col[5]||'', cidade: col[6]||'Paranoá', assunto: col[7]||'', conselheiro: col[8]||'', processoSeiNum: col[9]||'', dataRegistro: new Date().toLocaleDateString('pt-BR') });
-            }
-            mapearRegistros(dadosConvertidos);
-            mostrarMensagem("Dados importados com sucesso!");
-        }
-
-        function mapearRegistros(linhasBrutas) {
-            linhasBrutas.forEach((row) => {
-                let nomeCrianca = row['NOME DA CRIANÇA / ADOLESCENTE'] || row.nomeCrianca || '';
-                let letra = 'A';
-                if (nomeCrianca.trim().length > 0) {
-                    letra = nomeCrianca.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "")[0].toUpperCase();
-                    if (!/[A-Z]/.test(letra)) letra = 'A';
-                }
-
-                let maxNum = 0;
-                registrosCarregados.forEach(item => {
-                    if (item.pasta && item.pasta.startsWith(letra + '-')) {
-                        let partes = item.pasta.split('-');
-                        let num = parseInt(partes[1]);
-                        if (!isNaN(num) && num > maxNum) maxNum = num;
-                    }
-                });
-
-                let pastaGerada = `${letra}-${maxNum + 1}`;
-
-                let novoItem = {
-                    pasta: pastaGerada,
-                    numProces: row['Nº PROCES'] || row['numProces'] || '',
-                    nomeCrianca: nomeCrianca,
-                    dataNasc: row['DATA NASC'] || row.dataNasc || '',
-                    nomeResponsavel: row['NOME DO RESPONSÁVEL'] || row.nomeResponsavel || '',
-                    endereco: row['ENDEREÇO'] || row.endereco || '',
-                    cidade: row['CIDADE'] || row.cidade || 'Paranoá',
-                    assunto: row['ASSUNTO'] || row.assunto || '',
-                    conselheiro: row['CONSELHEIRO(A)'] || row.conselheiro || '',
-                    processoSeiNum: row['PROCESSO SEI Nº'] || row.processoSeiNum || '',
-                    dataRegistro: row.dataRegistro || new Date().toLocaleDateString('pt-BR'),
-                    historicoServicos: []
-                };
-                registrosCarregados.push(novoItem);
-            });
-            salvarDadosLocalStorage();
-            atualizarTabelaTela(registrosCarregados);
-            atualizarDashboardEstatisticas();
-        }
-
-        // ========================================================================
-        // 9. CRUD DE PROCESSOS
-        // ========================================================================
-        function salvarRegistro() {
-            let criancaVal = obterValoresDinamicos('nomeCrianca');
-            if(!criancaVal) { alert("Preencha o nome da criança/adolescente!"); return; }
-
-            let editIndex = parseInt(document.getElementById('editIndex').value);
-            let respVal = [];
-            document.querySelectorAll('.nomeResponsavel').forEach(i => { if(i.value.trim()) respVal.push(i.value.trim()); });
-
-            let dadosForm = {
-                pasta: document.getElementById('pasta').value,
-                numProces: document.getElementById('numProces').value,
-                nomeCrianca: criancaVal,
-                dataNasc: document.getElementById('dataNasc').value,
-                nomeResponsavel: respVal.join(', '),
-                endereco: document.getElementById('endereco').value,
-                cidade: document.getElementById('cidade').value,
-                assunto: document.getElementById('assuntoInput').value,
-                conselheiro: document.getElementById('conselheiro').value,
-                processoSeiNum: document.getElementById('processoSeiNum').value,
-                dataRegistro: editIndex !== -1 && registrosCarregados[editIndex].dataRegistro ? registrosCarregados[editIndex].dataRegistro : new Date().toLocaleDateString('pt-BR'),
-                historicoServicos: editIndex !== -1 && registrosCarregados[editIndex].historicoServicos ? registrosCarregados[editIndex].historicoServicos : []
+            const dadosObj = {
+                pasta,
+                numProces,
+                criancas,
+                dataNasc,
+                responsaveis,
+                endereco,
+                cidade,
+                assunto,
+                conselheiro,
+                processoSeiNum,
+                historicoServicos: editIndex >= 0 && registros[editIndex] ? registros[editIndex].historicoServicos || [] : []
             };
 
-            if (editIndex === -1) {
-                // Verifica se a pasta já existe
-                let pastaExistente = registrosCarregados.find(r => r.pasta === dadosForm.pasta);
-                if (pastaExistente) {
-                    // Gera nova pasta
-                    let letra = dadosForm.pasta.charAt(0);
-                    let maxNum = 0;
-                    registrosCarregados.forEach(item => {
-                        if (item.pasta && item.pasta.startsWith(letra + '-')) {
-                            let partes = item.pasta.split('-');
-                            let num = parseInt(partes[1]);
-                            if (!isNaN(num) && num > maxNum) maxNum = num;
-                        }
-                    });
-                    dadosForm.pasta = `${letra}-${maxNum + 1}`;
-                }
-                registrosCarregados.push(dadosForm);
-                mostrarMensagem("Processo cadastrado com sucesso!");
+            if (editIndex >= 0) {
+                registros[editIndex] = dadosObj;
+                document.getElementById('editIndex').value = "-1";
             } else {
-                dadosForm.pasta = registrosCarregados[editIndex].pasta;
-                registrosCarregados[editIndex] = dadosForm;
-                mostrarMensagem("Processo atualizado com sucesso!");
+                registros.push(dadosObj);
             }
 
-            salvarDadosLocalStorage();
-            atualizarTabelaTela(registrosCarregados);
+            localStorage.setItem('ct_registros', JSON.stringify(registros));
+            carregarTabela();
             atualizarDashboardEstatisticas();
-            tentarLimparFormulario();
+            limparFormularioCompleto();
+            
+            mostrarStatus("Registro salvo com sucesso!");
         }
 
-        function editarRegistro(index) {
-            const item = registrosCarregados[index];
-            document.getElementById('editIndex').value = index;
-            document.getElementById('pasta').value = item.pasta;
-            document.getElementById('numProces').value = item.numProces;
-            document.getElementById('dataNasc').value = item.dataNasc;
-            document.getElementById('endereco').value = item.endereco;
-            document.getElementById('cidade').value = item.cidade || 'Paranoá';
-            document.getElementById('assuntoInput').value = item.assunto;
-            document.getElementById('conselheiro').value = item.conselheiro;
-            document.getElementById('processoSeiNum').value = item.processoSeiNum;
-
-            const criancasContainer = document.getElementById('criancasContainer');
-            criancasContainer.innerHTML = '';
-            item.nomeCrianca.split(',').forEach(c => {
-                criancasContainer.innerHTML += `<div class="dynamic-item"><input type="text" class="nomeCrianca" value="${c.trim()}" placeholder="Nome Completo" oninput="calcularPastaAutomatica()"></div>`;
-            });
-
-            const respContainer = document.getElementById('responsaveisContainer');
-            respContainer.innerHTML = '';
-            item.nomeResponsavel.split(',').forEach(r => {
-                if(r.trim()) respContainer.innerHTML += `<div class="dynamic-item"><input type="text" class="nomeResponsavel" value="${r.trim()}" placeholder="Nome Completo"></div>`;
-            });
-
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+        function mostrarStatus(mensagem) {
+            const box = document.getElementById('statusBox');
+            box.innerText = mensagem;
+            box.style.display = 'block';
+            setTimeout(() => { box.style.display = 'none'; }, 4000);
         }
 
-        function removerRegistro(index) {
-            if(confirm("Excluir este registro?")) { 
-                registrosCarregados.splice(index, 1); 
-                salvarDadosLocalStorage();
-                atualizarTabelaTela(registrosCarregados); 
-                atualizarDashboardEstatisticas();
+        function tentarLimparFormulario() {
+            if(confirm("Deseja limpar todos os campos preenchidos?")) {
+                limparFormularioCompleto();
             }
         }
 
-        function tentarLimparFormulario() { 
-            document.getElementById('processoForm').reset(); 
-            document.getElementById('editIndex').value = '-1';
-            document.getElementById('pasta').value = '';
-            document.getElementById('cidade').value = 'Paranoá';
-            document.getElementById('criancasContainer').innerHTML = '<div class="dynamic-item"><input type="text" class="nomeCrianca" placeholder="Nome Completo" oninput="calcularPastaAutomatica()"></div>';
-            document.getElementById('responsaveisContainer').innerHTML = '<div class="dynamic-item"><input type="text" class="nomeResponsavel" placeholder="Nome Completo"></div>';
+        function limparFormularioCompleto() {
+            document.getElementById('processoForm').reset();
+            document.getElementById('editIndex').value = "-1";
+            document.getElementById('pasta').value = "";
+            document.getElementById('criancasContainer').innerHTML = `
+                <div class="dynamic-item">
+                    <input type="text" class="nomeCrianca" placeholder="Nome Completo" oninput="calcularPastaAutomatica()">
+                </div>
+            `;
+            document.getElementById('responsaveisContainer').innerHTML = `
+                <div class="dynamic-item">
+                    <input type="text" class="nomeResponsavel" placeholder="Nome Completo">
+                </div>
+            `;
+        }
+
+        function carregarTabela(dadosExibicao = registros) {
+            const tbody = document.querySelector('#tabelaRegistros tbody');
+            tbody.innerHTML = '';
+            
+            document.getElementById('contadorRegistros').innerText = `Total: ${dadosExibicao.length} registros`;
+
+            if (dadosExibicao.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="11" style="text-align: center; color: #64748b; padding: 20px;">Nenhum dado cadastrado ou encontrado.</td></tr>`;
+                return;
+            }
+
+            dadosExibicao.forEach((reg, index) => {
+                const tr = document.createElement('tr');
+                const criancasStr = reg.criancas ? reg.criancas.join(', ') : '';
+                const respStr = reg.responsaveis ? reg.responsaveis.join(', ') : '';
+                
+                tr.innerHTML = `
+                    <td style="font-weight: bold; color: var(--primary-color);">${reg.pasta || ''}</td>
+                    <td>${reg.numProces || ''}</td>
+                    <td>${criancasStr}</td>
+                    <td>${reg.dataNasc || ''}</td>
+                    <td>${respStr}</td>
+                    <td>${reg.endereco || ''}</td>
+                    <td>${reg.cidade || 'Paranoá'}</td>
+                    <td>${reg.assunto || ''}</td>
+                    <td>${reg.conselheiro || ''}</td>
+                    <td>${reg.processoSeiNum || ''}</td>
+                    <td style="text-align: center; white-space: nowrap;">
+                        <button class="btn-acao btn-historico" title="Histórico da Pasta" onclick="abrirModalHistorico(${index})"><i class="fa-solid fa-clock-rotate-left"></i></button>
+                        <button class="btn-acao btn-editar" title="Editar" onclick="editarRegistro(${index})"><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn-acao btn-deletar" title="Excluir" onclick="deletarRegistro(${index})"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
 
         function pesquisarProcessos() {
-            const termo = document.getElementById('inputPesquisaProcessos').value.trim().toLowerCase();
+            const termo = document.getElementById('inputPesquisaProcessos').value.toLowerCase();
             if (!termo) {
-                atualizarTabelaTela(registrosCarregados);
+                carregarTabela(registros);
                 return;
             }
-            const filtrados = registrosCarregados.filter(item => 
-                (item.nomeCrianca && item.nomeCrianca.toLowerCase().includes(termo)) ||
-                (item.nomeResponsavel && item.nomeResponsavel.toLowerCase().includes(termo)) ||
-                (item.numProces && item.numProces.toLowerCase().includes(termo)) ||
-                (item.assunto && item.assunto.toLowerCase().includes(termo)) ||
-                (item.pasta && item.pasta.toLowerCase().includes(termo))
-            );
-            atualizarTabelaTela(filtrados);
+            const filtrados = registros.filter(reg => {
+                const criancas = reg.criancas ? reg.criancas.join(' ').toLowerCase() : '';
+                const responsaveis = reg.responsaveis ? reg.responsaveis.join(' ').toLowerCase() : '';
+                const pasta = reg.pasta ? reg.pasta.toLowerCase() : '';
+                const num = reg.numProces ? reg.numProces.toLowerCase() : '';
+                const assunto = reg.assunto ? reg.assunto.toLowerCase() : '';
+                
+                return criancas.includes(termo) || responsaveis.includes(termo) || pasta.includes(termo) || num.includes(termo) || assunto.includes(termo);
+            });
+            carregarTabela(filtrados);
         }
 
-        // ========================================================================
-        // 10. RENDERIZAÇÃO DA TABELA DE PROCESSOS
-        // ========================================================================
-        function atualizarTabelaTela(listaExibicao) {
-            const tbody = document.querySelector('#tabelaRegistros tbody');
+        function editarRegistro(index) {
+            const reg = registros[index];
+            document.getElementById('editIndex').value = index;
+            document.getElementById('pasta').value = reg.pasta || '';
+            document.getElementById('numProces').value = reg.numProces || '';
+            document.getElementById('dataNasc').value = reg.dataNasc || '';
+            document.getElementById('endereco').value = reg.endereco || '';
+            document.getElementById('cidade').value = reg.cidade || 'Paranoá';
+            document.getElementById('assuntoInput').value = reg.assunto || '';
+            document.getElementById('conselheiro').value = reg.conselheiro || '';
+            document.getElementById('processoSeiNum').value = reg.processoSeiNum || '';
+
+            // Crianças
+            const containerC = document.getElementById('criancasContainer');
+            containerC.innerHTML = '';
+            if (reg.criancas && reg.criancas.length > 0) {
+                reg.criancas.forEach((c, i) => {
+                    const div = document.createElement('div');
+                    div.className = 'dynamic-item';
+                    div.innerHTML = `
+                        <input type="text" class="nomeCrianca" value="${c}" placeholder="Nome Completo" oninput="calcularPastaAutomatica()">
+                        ${i > 0 ? '<button type="button" class="btn-remove" onclick="removerCampo(this); calcularPastaAutomatica();"><i class="fa-solid fa-trash"></i></button>' : ''}
+                    `;
+                    containerC.appendChild(div);
+                });
+            }
+
+            // Responsáveis
+            const containerR = document.getElementById('responsaveisContainer');
+            containerR.innerHTML = '';
+            if (reg.responsaveis && reg.responsaveis.length > 0) {
+                reg.responsaveis.forEach((r, i) => {
+                    const div = document.createElement('div');
+                    div.className = 'dynamic-item';
+                    div.innerHTML = `
+                        <input type="text" class="nomeResponsavel" value="${r}" placeholder="Nome Completo">
+                        ${i > 0 ? '<button type="button" class="btn-remove" onclick="removerCampo(this)"><i class="fa-solid fa-trash"></i></button>' : ''}
+                    `;
+                    containerR.appendChild(div);
+                });
+            }
+
+            window.scrollTo({ top: 400, behavior: 'smooth' });
+        }
+
+        function deletarRegistro(index) {
+            if(confirm("Tem certeza que deseja excluir este registro permanentemente?")) {
+                registros.splice(index, 1);
+                localStorage.setItem('ct_registros', JSON.stringify(registros));
+                carregarTabela();
+                atualizarDashboardEstatisticas();
+                mostrarStatus("Registro excluído com sucesso.");
+            }
+        }
+
+        // Funções para Atendimentos da Recepção
+        function salvarAtendimento() {
+            const nome = document.getElementById('atendNome').value.trim();
+            const cidade = document.getElementById('atendCidade').value;
+            const assunto = document.getElementById('atendAssuntoInput').value.trim();
+            const dataHora = document.getElementById('atendDataHora').value;
+
+            if(!nome) {
+                alert("Por favor, preencha o nome da pessoa atendida.");
+                return;
+            }
+
+            atendimentos.push({ nome, cidade, assunto, dataHora });
+            localStorage.setItem('ct_atendimentos', JSON.stringify(atendimentos));
+            carregarTabelaAtendimentos();
+            limparFormAtendimento();
+            alert("Atendimento de recepção salvo com sucesso!");
+        }
+
+        function limparFormAtendimento() {
+            document.getElementById('atendimentoForm').reset();
+            const agora = new Date();
+            document.getElementById('atendDataHora').value = agora.toLocaleString('pt-BR');
+            document.getElementById('atendCidade').value = 'Paranoá';
+        }
+
+        function carregarTabelaAtendimentos() {
+            const tbody = document.querySelector('#tabelaAtendimentos tbody');
             tbody.innerHTML = '';
-            document.getElementById('contadorRegistros').innerText = `Total: ${listaExibicao.length} registros`;
-            if (listaExibicao.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; color: #64748b; padding: 20px;">Nenhum dado encontrado.</td></tr>';
+            document.getElementById('contadorAtendimentos').innerText = `Total: ${atendimentos.length}`;
+            document.getElementById('dashTotalAtendimentos').innerText = atendimentos.length;
+
+            const unicas = new Set(atendimentos.map(a => a.nome.toLowerCase()));
+            document.getElementById('dashPessoasUnicas').innerText = unicas.size;
+
+            if (atendimentos.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 20px;">Nenhum atendimento registrado.</td></tr>`;
                 return;
             }
-            listaExibicao.forEach((item) => {
-                let indexReal = registrosCarregados.indexOf(item);
-                let qtdServicos = item.historicoServicos ? item.historicoServicos.length : 0;
-                let badgeServicos = qtdServicos > 0 ? ` <span style="background: #8b5cf6; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px;" title="${qtdServicos} serviços extras">${qtdServicos}</span>` : '';
 
-                tbody.innerHTML += `<tr>
-                    <td><strong>${item.pasta}</strong></td><td>${item.numProces}</td><td>${item.nomeCrianca}</td><td>${item.dataNasc}</td><td>${item.nomeResponsavel}</td><td>${item.endereco}</td><td>${item.cidade}</td><td>${item.assunto}</td><td>${item.conselheiro}</td><td>${item.processoSeiNum}</td>
-                    <td style="text-align: center; white-space: nowrap;">
-                        <button type="button" class="btn-acao btn-historico" onclick="abrirHistoricoServicos(${indexReal})" title="Histórico de Serviços Prestados">${badgeServicos} <i class="fa-solid fa-clock-rotate-left"></i></button>
-                        <button type="button" class="btn-acao btn-editar" onclick="editarRegistro(${indexReal})" title="Editar"><i class="fa-solid fa-pen"></i></button>
-                        <button type="button" class="btn-acao btn-imprimir" onclick="imprimirCapa(${indexReal})" title="Imprimir Capa"><i class="fa-solid fa-print"></i></button>
-                        <button type="button" class="btn-acao btn-deletar" onclick="removerRegistro(${indexReal})" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+            atendimentos.forEach((at, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${at.dataHora}</td>
+                    <td style="font-weight: 600;">${at.nome}</td>
+                    <td>${at.cidade}</td>
+                    <td>${at.assunto || '---'}</td>
+                    <td style="text-align: center;">
+                        <button class="btn-acao btn-deletar" onclick="deletarAtendimento(${index})"><i class="fa-solid fa-trash"></i></button>
                     </td>
-                </tr>`;
+                `;
+                tbody.appendChild(tr);
             });
         }
 
-        // ========================================================================
-        // 11. DASHBOARD ESTATÍSTICO
-        // ========================================================================
-        function filtrarPorMesEAno(listaItens) {
-            const mesSel = document.getElementById('filtroMes').value;
-            const anoSel = document.getElementById('filtroAno').value;
-
-            return listaItens.filter(item => {
-                if (!item.dataRegistro) return false;
-                let partes;
-                if (item.dataRegistro.includes('/')) {
-                    partes = item.dataRegistro.split('/');
-                    if (partes.length < 3) return false;
-                    let m = partes[1];
-                    let a = partes[2];
-                    if (mesSel !== 'todos' && m !== mesSel) return false;
-                    if (a !== anoSel) return false;
-                    return true;
-                }
-                return true;
-            });
+        function deletarAtendimento(index) {
+            if(confirm("Deseja apagar este registro de atendimento?")) {
+                atendimentos.splice(index, 1);
+                localStorage.setItem('ct_atendimentos', JSON.stringify(atendimentos));
+                carregarTabelaAtendimentos();
+            }
         }
 
+        // Dashboard Estatístico
         function atualizarDashboardEstatisticas() {
-            let baseProcessosFiltrada = filtrarPorMesEAno(registrosCarregados);
-            let baseAtendimentosFiltrada = filtrarPorMesEAno(atendimentosRegistrados);
+            const mesFiltro = document.getElementById('filtroMes').value;
+            const anoFiltro = document.getElementById('filtroAno').value;
 
-            let consolidadosAssuntos = {};
-            let consolidadosCidades = {};
+            // Filtra registros baseado em data ou geral (assumimos processos gerais)
+            let listaFiltrada = registros; 
 
-            baseProcessosFiltrada.forEach(item => {
-                let assunto = item.assunto ? item.assunto.toUpperCase().trim() : 'NÃO INFORMADO';
-                let cidade = item.cidade ? item.cidade.trim() : 'Paranoá';
+            // Conta Assuntos
+            let contagemAssuntos = {};
+            let contagemCidades = {};
 
-                consolidadosAssuntos[assunto] = (consolidadosAssuntos[assunto] || 0) + 1;
-                if(cidade) {
-                    consolidadosCidades[cidade] = (consolidadosCidades[cidade] || 0) + 1;
-                }
+            listaFiltrada.forEach(reg => {
+                let ass = reg.assunto ? reg.assunto.trim() : "Não Informado";
+                contagemAssuntos[ass] = (contagemAssuntos[ass] || 0) + 1;
+
+                let cid = reg.cidade ? reg.cidade.trim() : "Paranoá";
+                contagemCidades[cid] = (contagemCidades[cid] || 0) + 1;
             });
 
-            baseAtendimentosFiltrada.forEach(item => {
-                let assunto = item.assunto ? item.assunto.toUpperCase().trim() : 'ATENDIMENTO RECEPÇÃO';
-                let cidade = item.endereco ? item.endereco.trim() : (item.cidade ? item.cidade.trim() : 'Paranoá');
+            // Renderiza Assuntos
+            const ulAssuntos = document.getElementById('listaAssuntosDash');
+            ulAssuntos.innerHTML = '';
+            let totalAss = 0;
 
-                consolidadosAssuntos[assunto] = (consolidadosAssuntos[assunto] || 0) + 1;
-                if(cidade) {
-                    consolidadosCidades[cidade] = (consolidadosCidades[cidade] || 0) + 1;
-                }
-            });
+            const chavesAssuntos = Object.keys(contagemAssuntos);
+            document.getElementById('totalAssuntosCount').innerText = listaFiltrada.length;
 
-            const listaAssuntosEl = document.getElementById('listaAssuntosDash');
-            listaAssuntosEl.innerHTML = '';
-            let totalGeralAssuntos = 0;
-
-            let assuntosOrdenados = Object.entries(consolidadosAssuntos).sort((a,b) => b[1] - a[1]);
-            
-            if (assuntosOrdenados.length === 0) {
-                listaAssuntosEl.innerHTML = '<li style="color: #64748b; text-align: center; display: block; padding: 15px;">Nenhum assunto registrado neste mês.</li>';
-                document.getElementById('totalAssuntosCount').innerText = '0';
+            if (chavesAssuntos.length === 0) {
+                ulAssuntos.innerHTML = `<li style="color: #64748b; text-align: center; display: block; padding: 15px;">Nenhum dado no período.</li>`;
             } else {
-                assuntosOrdenados.forEach(([assunto, qtd]) => {
-                    totalGeralAssuntos += qtd;
-                    listaAssuntosEl.innerHTML += `<li><span>${assunto}</span> <span class="dash-badge">${qtd}</span></li>`;
+                chavesAssuntos.forEach(ass => {
+                    let qtd = contagemAssuntos[ass];
+                    let li = document.createElement('li');
+                    li.innerHTML = `<span>${ass}</span> <span class="dash-badge">${qtd}</span>`;
+                    ulAssuntos.appendChild(li);
                 });
-                document.getElementById('totalAssuntosCount').innerText = totalGeralAssuntos;
             }
 
-            const listaCidadesEl = document.getElementById('listaCidadesDash');
-            listaCidadesEl.innerHTML = '';
-            let cidadesOrdenadas = Object.entries(consolidadosCidades).sort((a,b) => b[1] - a[1]);
-
-            if (cidadesOrdenadas.length === 0) {
-                listaCidadesEl.innerHTML = '<li style="color: #64748b; text-align: center; display: block; padding: 15px;">Nenhuma região registrada neste mês.</li>';
-                document.getElementById('regiaoDestaque').innerText = 'Destaque: ---';
+            // Renderiza Cidades
+            const ulCidades = document.getElementById('listaCidadesDash');
+            ulCidades.innerHTML = '';
+            const chavesCidades = Object.keys(contagemCidades);
+            
+            if (chavesCidades.length === 0) {
+                ulCidades.innerHTML = `<li style="color: #64748b; text-align: center; display: block; padding: 15px;">Nenhum dado no período.</li>`;
+                document.getElementById('regiaoDestaque').innerText = `Destaque: ---`;
             } else {
-                let regiaoMaisAtendida = cidadesOrdenadas[0][0];
-                let qtdMaisAtendida = cidadesOrdenadas[0][1];
-                document.getElementById('regiaoDestaque').innerText = `Mais Atendida: ${regiaoMaisAtendida} (${qtdMaisAtendida})`;
+                // Encontra maior cidade
+                let maiorCid = chavesCidades.reduce((a, b) => contagemCidades[a] > contagemCidades[b] ? a : b);
+                document.getElementById('regiaoDestaque').innerText = `Destaque: ${maiorCid}`;
 
-                cidadesOrdenadas.forEach(([cidade, qtd]) => {
-                    listaCidadesEl.innerHTML += `<li><span>${cidade}</span> <span class="dash-badge" style="background: #d1fae5; color: #065f46;">${qtd}</span></li>`;
+                chavesCidades.forEach(cid => {
+                    let qtd = contagemCidades[cid];
+                    let li = document.createElement('li');
+                    li.innerHTML = `<span><i class="fa-solid fa-location-dot" style="color: #0284c7;"></i> ${cid}</span> <span class="dash-badge">${qtd}</span>`;
+                    ulCidades.appendChild(li);
                 });
             }
         }
 
-        // ========================================================================
-        // 12. HISTÓRICO DE SERVIÇOS (MODAL)
-        // ========================================================================
-        function abrirHistoricoServicos(index) {
+        // Histórico Modal de Serviços da Pasta
+        function abrirModalHistorico(index) {
             document.getElementById('historicoIndexAtual').value = index;
-            const item = registrosCarregados[index];
+            const reg = registros[index];
+            document.getElementById('modalTituloPasta').innerHTML = `<i class="fa-solid fa-clock-rotate-left"></i> Histórico: ${reg.pasta}`;
+            document.getElementById('modalSubInfo').innerText = `Criança(s): ${reg.criancas.join(', ')} | Nº Processo: ${reg.numProces || 'N/A'}`;
             
-            document.getElementById('modalTituloPasta').innerHTML = `<i class="fa-solid fa-clock-rotate-left"></i> Histórico de Serviços - Pasta: ${item.pasta}`;
-            document.getElementById('modalSubInfo').innerText = `Criança/Adolescente: ${item.nomeCrianca} | Responsável: ${item.nomeResponsavel || '---'}`;
-            
-            document.getElementById('novoServicoData').value = new Date().toLocaleDateString('pt-BR');
-            document.getElementById('novoServicoConselheiro').value = item.conselheiro || '';
-            document.getElementById('novoServicoDescricao').value = '';
-
-            atualizarTabelaHistoricoModal(item.historicoServicos);
+            carregarTabelaHistoricoServicos(reg.historicoServicos || []);
             document.getElementById('modalHistorico').style.display = 'flex';
         }
 
         function fecharModalHistorico() {
             document.getElementById('modalHistorico').style.display = 'none';
+            document.getElementById('novoServicoData').value = '';
+            document.getElementById('novoServicoConselheiro').value = '';
+            document.getElementById('novoServicoDescricao').value = '';
         }
 
         function adicionarNovoServicoNaPasta() {
             const index = parseInt(document.getElementById('historicoIndexAtual').value);
-            const dataServico = document.getElementById('novoServicoData').value.trim();
-            const conselheiroServico = document.getElementById('novoServicoConselheiro').value.trim();
-            const descricaoServico = document.getElementById('novoServicoDescricao').value.trim();
+            const data = document.getElementById('novoServicoData').value.trim();
+            const conselheiro = document.getElementById('novoServicoConselheiro').value.trim();
+            const descricao = document.getElementById('novoServicoDescricao').value.trim();
 
-            if (!descricaoServico) {
-                alert("Por favor, preencha a descrição do serviço oferecido/demanda!");
+            if (!data || !descricao) {
+                alert("Preencha ao menos a data e a descrição do serviço prestado.");
                 return;
             }
 
-            if (!registrosCarregados[index].historicoServicos) {
-                registrosCarregados[index].historicoServicos = [];
+            if (!registros[index].historicoServicos) {
+                registros[index].historicoServicos = [];
             }
 
-            registrosCarregados[index].historicoServicos.push({
-                data: dataServico || new Date().toLocaleDateString('pt-BR'),
-                conselheiro: conselheiroServico || 'Não informado',
-                descricao: descricaoServico
-            });
+            registros[index].historicoServicos.push({ data, conselheiro, descricao });
+            localStorage.setItem('ct_registros', JSON.stringify(registros));
 
+            carregarTabelaHistoricoServicos(registros[index].historicoServicos);
+            
+            // Limpa campos de inserção do modal
+            document.getElementById('novoServicoData').value = '';
+            document.getElementById('novoServicoConselheiro').value = '';
             document.getElementById('novoServicoDescricao').value = '';
-            salvarDadosLocalStorage();
-            atualizarTabelaHistoricoModal(registrosCarregados[index].historicoServicos);
-            atualizarTabelaTela(registrosCarregados);
-            mostrarMensagem("Serviço adicionado ao histórico com sucesso!");
         }
 
-        function removerServicoHistorico(servicoIndex) {
-            const index = parseInt(document.getElementById('historicoIndexAtual').value);
-            if (confirm("Deseja remover este serviço do histórico?")) {
-                registrosCarregados[index].historicoServicos.splice(servicoIndex, 1);
-                salvarDadosLocalStorage();
-                atualizarTabelaHistoricoModal(registrosCarregados[index].historicoServicos);
-                atualizarTabelaTela(registrosCarregados);
-            }
-        }
-
-        function atualizarTabelaHistoricoModal(listaServicos) {
+        function carregarTabelaHistoricoServicos(historicoArray) {
             const tbody = document.querySelector('#tabelaHistoricoServicos tbody');
             tbody.innerHTML = '';
-            
-            if (!listaServicos || listaServicos.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #64748b; padding: 15px;">Nenhum serviço registrado no histórico desta pasta.</td></tr>';
+
+            if (!historicoArray || historicoArray.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #64748b; padding: 15px;">Nenhum serviço registrado no histórico desta pasta.</td></tr>`;
                 return;
             }
 
-            listaServicos.forEach((serv, sIndex) => {
-                tbody.innerHTML += `<tr>
+            historicoArray.forEach((serv, sIndex) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
                     <td>${serv.data}</td>
-                    <td><strong>${serv.conselheiro}</strong></td>
+                    <td>${serv.conselheiro || '---'}</td>
                     <td>${serv.descricao}</td>
-                    <td style="text-align: center;"><button type="button" class="btn-acao btn-deletar" onclick="removerServicoHistorico(${sIndex})" title="Excluir item"><i class="fa-solid fa-trash"></i></button></td>
-                </tr>`;
+                    <td style="text-align: center;">
+                        <button class="btn-acao btn-deletar" onclick="removerServicoHistorico(${sIndex})"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
             });
         }
 
-        // ========================================================================
-        // 13. IMPRESSÃO DA CAPA
-        // ========================================================================
-        function imprimirCapa(index) {
-            const item = registrosCarregados[index];
-            const janelaImpressao = window.open('', '_blank', 'width=800,height=900');
-            
-            let enderecoCompleto = item.endereco || '';
-            if (item.cidade) {
-                enderecoCompleto += (enderecoCompleto ? ' – ' : '') + item.cidade;
+        function removerServicoHistorico(sIndex) {
+            const index = parseInt(document.getElementById('historicoIndexAtual').value);
+            if(confirm("Deseja remover este evento do histórico?")) {
+                registros[index].historicoServicos.splice(sIndex, 1);
+                localStorage.setItem('ct_registros', JSON.stringify(registros));
+                carregarTabelaHistoricoServicos(registros[index].historicoServicos);
             }
-
-            janelaImpressao.document.write(`
-                <!DOCTYPE html>
-                <html lang="pt-BR">
-                <head>
-                    <meta charset="UTF-8">
-                    <title>Capa do Processo - ${item.pasta}</title>
-                    <style>
-                        @page { size: A4; margin: 1.5cm; }
-                        * { box-sizing: border-box; }
-                        body { font-family: Calibri, sans-serif; margin: 0; padding: 0; color: #000; background-color: #fff; }
-                        .capa-folha { width: 100%; height: 25.7cm; margin: 0 auto; border: 2px solid #000; padding: 35px; position: relative; }
-                        .cabecalho-principal { text-align: center; font-size: 18pt; font-weight: bold; line-height: 1.4; text-transform: uppercase; }
-                        .linha-topo { display: flex; justify-content: space-between; align-items: baseline; font-size: 26pt; font-weight: bold; margin-top: 3.2em; margin-bottom: 35px; padding-left: 10px; padding-right: 10px; }
-                        .bloco-dados { display: flex; flex-direction: column; gap: 20px; font-size: 20pt; font-weight: bold; line-height: 1.3; padding-left: 10px; }
-                        .bloco-centro-baixo { position: absolute; bottom: 95px; left: 35px; right: 35px; display: flex; flex-direction: column; gap: 20px; }
-                        .bloco-assunto { font-size: 20pt; font-weight: bold; text-transform: uppercase; text-align: center; width: 100%; }
-                        .bloco-inferior { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; }
-                        .bloco-direita { text-align: right; font-size: 14pt; font-weight: bold; line-height: 1.4; }
-                        @media print {
-                            html, body { width: 210mm; height: 297mm; margin: 0; padding: 0; }
-                            .capa-folha { border: 2px solid #000; width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
-                            .nao-imprimir { display: none; }
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="capa-folha">
-                        <div>
-                            <div class="cabecalho-principal">
-                                CONSELHO TUTELAR DO PARANOÁ<br>ARQUIVO ATIVO
-                            </div>
-                            <div class="linha-topo">
-                                <span>${item.pasta || '---'}</span>
-                                <span>PROCESSO: ${item.numProces || '---'}</span>
-                            </div>
-                            <br><br><br>
-                            <div class="bloco-dados">
-                                <div>ADOLESCENTE: ${item.nomeCrianca ? item.nomeCrianca.toUpperCase() : '---'}</div>
-                                <div>RESPONSAVEL: ${item.nomeResponsavel ? item.nomeResponsavel.toUpperCase() : '---'}</div>
-                                <div>ENDEREÇO: ${enderecoCompleto ? enderecoCompleto.toUpperCase() : '---'}</div>
-                            </div>
-                        </div>
-                        <div class="bloco-centro-baixo">
-                            <div class="bloco-assunto">ASSUNTO: ${item.assunto ? item.assunto.toUpperCase() : '---'}</div>
-                            <div class="bloco-inferior">
-                                <div></div>
-                                <div class="bloco-direita">
-                                    CONSELHEIRO(A): ${item.conselheiro ? item.conselheiro.toUpperCase() : '---'}<br>
-                                    SEI: ${item.processoSeiNum || '---'}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="nao-imprimir" style="text-align: center; margin-top: 30px; margin-bottom: 30px;">
-                        <button onclick="window.print()" style="padding: 12px 24px; font-size: 16px; background: #1e3a8a; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;"><i class="fa-solid fa-print"></i> Imprimir Capa Agora</button>
-                    </div>
-                </body>
-                </html>
-            `);
-            janelaImpressao.document.close();
         }
 
-        // ========================================================================
-        // 14. FUNÇÕES DA ABA 2 (ATENDIMENTOS)
-        // ========================================================================
-        function salvarAtendimento() {
-            const nome = document.getElementById('atendNome').value.trim();
-            const assunto = document.getElementById('atendAssuntoInput').value.trim();
-            const cidade = document.getElementById('atendCidade').value.trim();
-            if(!nome || !assunto) { alert("Preencha o Nome e o Assunto!"); return; }
-
-            const novoAtendimento = {
-                dataHora: document.getElementById('atendDataHora').value,
-                dataRegistro: new Date().toLocaleDateString('pt-BR'),
-                nome: nome,
-                endereco: cidade,
-                cidade: cidade,
-                assunto: assunto
+        // Importação Excel e Texto Colado
+        function processarPlanilha(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheet = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheet];
+                const json = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                inserirDadosImportados(json);
             };
-
-            atendimentosRegistrados.push(novoAtendimento);
-            salvarDadosLocalStorage();
-            atualizarDashboardEAtendimentos();
-            atualizarDashboardEstatisticas();
-            limparFormAtendimento();
-            mostrarMensagem("Ato de atendimento registrado com sucesso!");
+            reader.readAsArrayBuffer(file);
         }
 
-        function limparFormAtendimento() {
-            document.getElementById('atendimentoForm').reset();
-            document.getElementById('atendCidade').value = 'Paranoá';
-            atualizarDataHoraAtual();
-        }
-
-        function removerAtendimento(index) {
-            if(confirm("Deseja excluir este registro de atendimento?")) {
-                atendimentosRegistrados.splice(index, 1);
-                salvarDadosLocalStorage();
-                atualizarDashboardEAtendimentos();
-                atualizarDashboardEstatisticas();
-            }
-        }
-
-        function atualizarDashboardEAtendimentos() {
-            const tbody = document.querySelector('#tabelaAtendimentos tbody');
-            tbody.innerHTML = '';
-            
-            document.getElementById('contadorAtendimentos').innerText = `Total: ${atendimentosRegistrados.length}`;
-            document.getElementById('dashTotalAtendimentos').innerText = atendimentosRegistrados.length;
-
-            const pessoasUnicas = new Set(atendimentosRegistrados.map(a => a.nome.toLowerCase()));
-            document.getElementById('dashPessoasUnicas').innerText = pessoasUnicas.size;
-
-            if (atendimentosRegistrados.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 20px;">Nenhum atendimento registrado.</td></tr>';
+        function clicarColar() {
+            const texto = document.getElementById('pasteInput').value;
+            if(!texto.trim()) {
+                alert("Cole os dados no campo de texto primeiro.");
                 return;
             }
-
-            atendimentosRegistrados.forEach((item, index) => {
-                tbody.innerHTML += `<tr>
-                    <td>${item.dataHora}</td>
-                    <td><strong>${item.nome}</strong></td>
-                    <td>${item.cidade || 'Paranoá'}</td>
-                    <td><span style="background: #e0f2fe; color: #0369a1; padding: 3px 8px; border-radius: 4px; font-weight: 600;">${item.assunto}</span></td>
-                    <td style="text-align: center;"><button type="button" class="btn-acao btn-deletar" onclick="removerAtendimento(${index})"><i class="fa-solid fa-trash"></i></button></td>
-                </tr>`;
-            });
+            const linhas = texto.split('\n').map(l => l.split('\t'));
+            inserirDadosImportados(linhas);
         }
 
-        // Fecha o modal ao clicar fora
-        document.addEventListener('click', function(e) {
-            const modal = document.getElementById('modalHistorico');
-            if (e.target === modal) {
-                fecharModalHistorico();
-            }
-        });
+        function processarDadosColados(event) {
+            setTimeout(() => {
+                const texto = event.target.value;
+                if(texto.trim()) {
+                    const linhas = texto.split('\n').map(l => l.split('\t'));
+                    inserirDadosImportados(linhas);
+                }
+            }, 200);
+        }
 
-        console.log('✅ Sistema completo carregado!');
-        console.log(`📊 ${registrosCarregados.length} processos cadastrados`);
-        console.log(`📋 ${atendimentosRegistrados.length} atendimentos registrados`);
+        function inserirDadosImportados(linhas) {
+            let importadosCount = 0;
+            linhas.forEach(row => {
+                if(row.length > 0 && row[0] && row[0].trim() !== "") {
+                    // Mapeamento simples adaptável de colunas comuns do Excel
+                    const nomeCrianca = row[2] || row[0] || "Sem Nome";
+                    let partes = nomeCrianca.trim().split(" ");
+                    let primeiroNome = partes[0].toUpperCase();
+
+                    registros.push({
+                        pasta: `PASTA - ${primeiroNome}`,
+                        numProces: row[1] || "",
+                        criancas: [nomeCrianca],
+                        dataNasc: row[3] || "",
+                        responsaveis: [row[4] || ""],
+                        endereco: row[5] || "",
+                        cidade: row[6] || "Paranoá",
+                        assunto: row[7] || "Outros Assuntos Diversos",
+                        conselheiro: row[8] || "",
+                        processoSeiNum: row[9] || "",
+                        historicoServicos: []
+                    });
+                    importadosCount++;
+                }
+            });
+
+            if(importadosCount > 0) {
+                localStorage.setItem('ct_registros', JSON.stringify(registros));
+                carregarTabela();
+                atualizarDashboardEstatisticas();
+                alert(`${importadosCount} registros importados com sucesso!`);
+                document.getElementById('pasteInput').value = '';
+            } else {
+                alert("Não foi possível identificar dados válidos na importação.");
+            }
+        }
     </script>
 </body>
 </html>
