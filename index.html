@@ -926,7 +926,7 @@
         let atendimentosRegistrados = [];
 
         // ========================================================================
-        // 3. FUNÇÕES DE INICIALIZAÇÃO E PERSISTÊNCIA
+        // 3. FUNÇÕES DE PERSISTÊNCIA (LOCAL STORAGE)
         // ========================================================================
         function carregarDadosLocalStorage() {
             try {
@@ -955,38 +955,27 @@
         // ========================================================================
         // 4. INICIALIZAÇÃO DA PÁGINA
         // ========================================================================
-        window.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('DOMContentLoaded', () => {
             // Carrega dados do localStorage
             carregarDadosLocalStorage();
-
-            // Configura data/hora atual
-            atualizarDataHoraAtual();
             
-            // Configura os autocompletes
-            configurarAutocomplete('assuntoInput', 'assuntoAutocompleteList');
-            configurarAutocomplete('atendAssuntoInput', 'atendAssuntoAutocompleteList');
-
-            // Atualiza a data/hora a cada segundo
-            setInterval(atualizarDataHoraAtual, 1000);
-
-            // Define mês e ano atuais nos filtros
             const dataAtual = new Date();
             const mesAtualStr = String(dataAtual.getMonth() + 1).padStart(2, '0');
             const anoAtualStr = String(dataAtual.getFullYear());
             
             const selectMes = document.getElementById('filtroMes');
-            if (selectMes) selectMes.value = mesAtualStr;
+            if(selectMes) selectMes.value = mesAtualStr;
             const selectAno = document.getElementById('filtroAno');
-            if (selectAno) selectAno.value = anoAtualStr;
-
-            // Renderiza dados
+            if(selectAno) selectAno.value = anoAtualStr;
+            
+            atualizarDataHoraAtual();
             atualizarTabelaTela(registrosCarregados);
             atualizarDashboardEAtendimentos();
             atualizarDashboardEstatisticas();
 
-            console.log('Sistema inicializado com sucesso!');
-            console.log(`📊 ${registrosCarregados.length} processos cadastrados`);
-            console.log(`📋 ${atendimentosRegistrados.length} atendimentos registrados`);
+            // Configurar Autocompletes
+            configurarAutocomplete('assuntoInput', 'assuntoAutocompleteList');
+            configurarAutocomplete('atendAssuntoInput', 'atendAssuntoAutocompleteList');
         });
 
         // ========================================================================
@@ -996,64 +985,39 @@
             const inputEl = document.getElementById(inputId);
             const listEl = document.getElementById(listId);
 
-            if (!inputEl || !listEl) return;
-
             inputEl.addEventListener('input', function() {
                 const val = this.value;
                 listEl.innerHTML = '';
-                if (!val || val.length < 1) {
-                    listEl.style.display = 'none';
-                    return;
-                }
+                if (!val) return;
 
                 const matchVal = val.toLowerCase();
                 let count = 0;
-                let encontrados = [];
 
                 for (let i = 0; i < listaAssuntosCompleta.length; i++) {
                     if (listaAssuntosCompleta[i].toLowerCase().includes(matchVal)) {
-                        encontrados.push(listaAssuntosCompleta[i]);
+                        let itemDiv = document.createElement('div');
+                        
+                        let textoOriginal = listaAssuntosCompleta[i];
+                        let idx = textoOriginal.toLowerCase().indexOf(matchVal);
+                        let textoFormatado = textoOriginal.substring(0, idx) + 
+                            "<strong>" + textoOriginal.substring(idx, idx + matchVal.length) + "</strong>" + 
+                            textoOriginal.substring(idx + matchVal.length);
+
+                        itemDiv.innerHTML = textoFormatado;
+                        itemDiv.addEventListener('click', function() {
+                            inputEl.value = textoOriginal;
+                            listEl.innerHTML = '';
+                        });
+                        listEl.appendChild(itemDiv);
                         count++;
                         if (count >= 15) break;
                     }
                 }
-
-                if (encontrados.length === 0) {
-                    listEl.innerHTML = `<div style="padding: 8px; color: #64748b; font-style: italic;">Nenhum assunto encontrado. Digite para criar novo.</div>`;
-                    listEl.style.display = 'block';
-                    return;
-                }
-
-                encontrados.forEach(function(texto) {
-                    let itemDiv = document.createElement('div');
-                    
-                    // Destacar o termo correspondente
-                    let idx = texto.toLowerCase().indexOf(matchVal);
-                    let textoFormatado = texto.substring(0, idx) + 
-                        "<strong>" + texto.substring(idx, idx + matchVal.length) + "</strong>" + 
-                        texto.substring(idx + matchVal.length);
-
-                    itemDiv.innerHTML = textoFormatado;
-                    itemDiv.addEventListener('click', function() {
-                        inputEl.value = texto;
-                        listEl.innerHTML = '';
-                        listEl.style.display = 'none';
-                        
-                        // Adiciona ao histórico de assuntos se não existir
-                        if (!listaAssuntosCompleta.includes(texto)) {
-                            listaAssuntosCompleta.push(texto);
-                        }
-                    });
-                    listEl.appendChild(itemDiv);
-                });
-                listEl.style.display = 'block';
             });
 
-            // Fechar sugestões ao clicar fora
             document.addEventListener('click', function(e) {
                 if (e.target !== inputEl) {
                     listEl.innerHTML = '';
-                    listEl.style.display = 'none';
                 }
             });
         }
@@ -1067,15 +1031,6 @@
             
             document.getElementById(abaId).classList.add('active');
             btnElement.classList.add('active');
-            
-            if (abaId === 'atendimentoTab') {
-                atualizarDataHoraAtual();
-                atualizarDashboardEAtendimentos();
-            }
-            if (abaId === 'processosTab') {
-                atualizarDashboardEstatisticas();
-                atualizarTabelaTela(registrosCarregados);
-            }
         }
 
         function toggleDashboard() {
@@ -1098,18 +1053,16 @@
             const agora = new Date();
             const dataFormatada = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR');
             const inputDH = document.getElementById('atendDataHora');
-            if (inputDH) inputDH.value = dataFormatada;
+            if(inputDH) inputDH.value = dataFormatada;
             const spanH = document.getElementById('spanDataHoje');
-            if (spanH) spanH.innerText = dataFormatada;
+            if(spanH) spanH.innerText = dataFormatada;
         }
+        setInterval(atualizarDataHoraAtual, 1000);
 
-        function mostrarMensagem(texto, isError = false) {
+        function mostrarMensagem(texto) {
             const box = document.getElementById('statusBox');
             box.style.display = 'block';
             box.innerText = texto;
-            box.style.background = isError ? '#fee2e2' : '#d1fae5';
-            box.style.color = isError ? '#991b1b' : '#065f46';
-            box.style.borderLeftColor = isError ? '#ef4444' : '#10b981';
             setTimeout(() => { box.style.display = 'none'; }, 4000);
         }
 
@@ -1134,9 +1087,7 @@
 
         function obterValoresDinamicos(classeInput) {
             let valores = [];
-            document.querySelectorAll('.' + classeInput).forEach(input => { 
-                if (input.value.trim() !== '') valores.push(input.value.trim()); 
-            });
+            document.querySelectorAll('.' + classeInput).forEach(input => { if (input.value.trim() !== '') valores.push(input.value.trim()); });
             return valores.join(', ');
         }
 
@@ -1172,94 +1123,34 @@
         // ========================================================================
         function processarPlanilha(event) {
             const arquivo = event.target.files[0];
-            if (!arquivo) return;
-            
             const leitor = new FileReader();
             leitor.onload = function(e) {
-                try {
-                    const dadosBinarios = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(dadosBinarios, { type: 'array' });
-                    const primeiraPlanilha = workbook.Sheets[workbook.SheetNames[0]];
-                    const dadosJSON = XLSX.utils.sheet_to_json(primeiraPlanilha);
-                    mapearRegistros(dadosJSON);
-                    mostrarMensagem("Planilha importada com sucesso!");
-                } catch (error) {
-                    mostrarMensagem("Erro ao processar a planilha: " + error.message, true);
-                    console.error(error);
-                }
+                const dadosBinarios = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(dadosBinarios, { type: 'array' });
+                mapearRegistros(XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]));
             };
             leitor.readAsArrayBuffer(arquivo);
-            event.target.value = '';
         }
 
-        function clicarColar() {
-            const textarea = document.getElementById('pasteInput');
-            const texto = textarea.value;
-            if (!texto.trim()) {
-                mostrarMensagem("Cole os dados primeiro!", true);
-                return;
-            }
-            executarColagem(texto);
-            textarea.value = '';
-        }
-
-        function processarDadosColados(event) {
-            setTimeout(() => {
-                executarColagem(event.target.value);
-                event.target.value = '';
-            }, 100);
-        }
+        function clicarColar() { executarColagem(document.getElementById('pasteInput').value); }
+        function processarDadosColados(event) { setTimeout(() => { executarColagem(event.target.value); }, 100); }
 
         function executarColagem(textoColado) {
             if (!textoColado.trim()) return;
-            
             const linhas = textoColado.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-            if (linhas.length === 0) {
-                mostrarMensagem("Nenhuma linha válida encontrada.", true);
-                return;
-            }
-            
             let dadosConvertidos = [];
             let inicioIndex = (linhas[0].includes('PASTA') || linhas[0].includes('PROCES')) ? 1 : 0;
-            
             for (let i = inicioIndex; i < linhas.length; i++) {
                 const col = linhas[i].split('\t');
-                dadosConvertidos.push({ 
-                    numProces: col[1] || '', 
-                    nomeCrianca: col[2] || '', 
-                    dataNasc: col[3] || '', 
-                    nomeResponsavel: col[4] || '', 
-                    endereco: col[5] || '', 
-                    cidade: col[6] || 'Paranoá', 
-                    assunto: col[7] || '', 
-                    conselheiro: col[8] || '', 
-                    processoSeiNum: col[9] || '', 
-                    dataRegistro: new Date().toLocaleDateString('pt-BR') 
-                });
+                dadosConvertidos.push({ numProces: col[1]||'', nomeCrianca: col[2]||'', dataNasc: col[3]||'', nomeResponsavel: col[4]||'', endereco: col[5]||'', cidade: col[6]||'Paranoá', assunto: col[7]||'', conselheiro: col[8]||'', processoSeiNum: col[9]||'', dataRegistro: new Date().toLocaleDateString('pt-BR') });
             }
-            
             mapearRegistros(dadosConvertidos);
-            mostrarMensagem("Dados colados importados com sucesso!");
+            mostrarMensagem("Dados importados com sucesso!");
         }
 
         function mapearRegistros(linhasBrutas) {
-            let importados = 0;
-            
             linhasBrutas.forEach((row) => {
-                // Identifica colunas por nome ou posição
-                let nomeCrianca = row['NOME DA CRIANÇA / ADOLESCENTE'] || row['nomeCrianca'] || row['NOME'] || '';
-                let nomeResponsavel = row['NOME DO RESPONSÁVEL'] || row['nomeResponsavel'] || row['RESPONSÁVEL'] || '';
-                let numProces = row['Nº PROCES'] || row['numProces'] || row['PROCESSO'] || '';
-                let dataNasc = row['DATA NASC'] || row['dataNasc'] || row['NASCIMENTO'] || '';
-                let endereco = row['ENDEREÇO'] || row['endereco'] || '';
-                let cidade = row['CIDADE'] || row['cidade'] || row['LOCALIDADE'] || 'Paranoá';
-                let assunto = row['ASSUNTO'] || row['assunto'] || '';
-                let conselheiro = row['CONSELHEIRO(A)'] || row['conselheiro'] || '';
-                let processoSeiNum = row['PROCESSO SEI Nº'] || row['processoSeiNum'] || row['SEI'] || '';
-
-                if (!nomeCrianca && !assunto) return; // Pula linhas sem dados essenciais
-
-                // Gera pasta automaticamente
+                let nomeCrianca = row['NOME DA CRIANÇA / ADOLESCENTE'] || row.nomeCrianca || '';
                 let letra = 'A';
                 if (nomeCrianca.trim().length > 0) {
                     letra = nomeCrianca.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "")[0].toUpperCase();
@@ -1277,40 +1168,25 @@
 
                 let pastaGerada = `${letra}-${maxNum + 1}`;
 
-                // Verifica se já existe registro duplicado
-                const existe = registrosCarregados.some(r => 
-                    r.nomeCrianca === nomeCrianca && r.assunto === assunto && r.pasta === pastaGerada
-                );
-
-                if (existe) return;
-
                 let novoItem = {
                     pasta: pastaGerada,
-                    numProces: numProces,
+                    numProces: row['Nº PROCES'] || row['numProces'] || '',
                     nomeCrianca: nomeCrianca,
-                    dataNasc: dataNasc,
-                    nomeResponsavel: nomeResponsavel,
-                    endereco: endereco,
-                    cidade: cidade,
-                    assunto: assunto,
-                    conselheiro: conselheiro,
-                    processoSeiNum: processoSeiNum,
-                    dataRegistro: new Date().toLocaleDateString('pt-BR'),
+                    dataNasc: row['DATA NASC'] || row.dataNasc || '',
+                    nomeResponsavel: row['NOME DO RESPONSÁVEL'] || row.nomeResponsavel || '',
+                    endereco: row['ENDEREÇO'] || row.endereco || '',
+                    cidade: row['CIDADE'] || row.cidade || 'Paranoá',
+                    assunto: row['ASSUNTO'] || row.assunto || '',
+                    conselheiro: row['CONSELHEIRO(A)'] || row.conselheiro || '',
+                    processoSeiNum: row['PROCESSO SEI Nº'] || row.processoSeiNum || '',
+                    dataRegistro: row.dataRegistro || new Date().toLocaleDateString('pt-BR'),
                     historicoServicos: []
                 };
                 registrosCarregados.push(novoItem);
-                importados++;
             });
-
             salvarDadosLocalStorage();
             atualizarTabelaTela(registrosCarregados);
             atualizarDashboardEstatisticas();
-            
-            if (importados > 0) {
-                mostrarMensagem(`${importados} novos registros importados com sucesso!`);
-            } else {
-                mostrarMensagem("Nenhum novo registro foi importado (verifique se os dados já existem).", true);
-            }
         }
 
         // ========================================================================
@@ -1318,63 +1194,47 @@
         // ========================================================================
         function salvarRegistro() {
             let criancaVal = obterValoresDinamicos('nomeCrianca');
-            if (!criancaVal) {
-                mostrarMensagem("Preencha o nome da criança/adolescente!", true);
-                return;
-            }
+            if(!criancaVal) { alert("Preencha o nome da criança/adolescente!"); return; }
 
             let editIndex = parseInt(document.getElementById('editIndex').value);
             let respVal = [];
-            document.querySelectorAll('.nomeResponsavel').forEach(i => { 
-                if (i.value.trim()) respVal.push(i.value.trim()); 
-            });
-
-            let assunto = document.getElementById('assuntoInput').value.trim();
-            if (!assunto) {
-                mostrarMensagem("Preencha o assunto!", true);
-                return;
-            }
-
-            let conselheiro = document.getElementById('conselheiro').value;
-            if (!conselheiro) {
-                mostrarMensagem("Selecione o conselheiro responsável!", true);
-                return;
-            }
+            document.querySelectorAll('.nomeResponsavel').forEach(i => { if(i.value.trim()) respVal.push(i.value.trim()); });
 
             let dadosForm = {
-                pasta: document.getElementById('pasta').value || 'A-1',
+                pasta: document.getElementById('pasta').value,
                 numProces: document.getElementById('numProces').value,
                 nomeCrianca: criancaVal,
                 dataNasc: document.getElementById('dataNasc').value,
                 nomeResponsavel: respVal.join(', '),
                 endereco: document.getElementById('endereco').value,
-                cidade: document.getElementById('cidade').value || 'Paranoá',
-                assunto: assunto,
-                conselheiro: conselheiro,
+                cidade: document.getElementById('cidade').value,
+                assunto: document.getElementById('assuntoInput').value,
+                conselheiro: document.getElementById('conselheiro').value,
                 processoSeiNum: document.getElementById('processoSeiNum').value,
-                dataRegistro: new Date().toLocaleDateString('pt-BR'),
-                historicoServicos: []
+                dataRegistro: editIndex !== -1 && registrosCarregados[editIndex].dataRegistro ? registrosCarregados[editIndex].dataRegistro : new Date().toLocaleDateString('pt-BR'),
+                historicoServicos: editIndex !== -1 && registrosCarregados[editIndex].historicoServicos ? registrosCarregados[editIndex].historicoServicos : []
             };
 
             if (editIndex === -1) {
-                // Verifica duplicidade
-                const existe = registrosCarregados.some(r => 
-                    r.nomeCrianca === dadosForm.nomeCrianca && 
-                    r.assunto === dadosForm.assunto &&
-                    r.pasta === dadosForm.pasta
-                );
-                if (existe) {
-                    mostrarMensagem("Este registro já existe!", true);
-                    return;
+                // Verifica se a pasta já existe
+                let pastaExistente = registrosCarregados.find(r => r.pasta === dadosForm.pasta);
+                if (pastaExistente) {
+                    // Gera nova pasta
+                    let letra = dadosForm.pasta.charAt(0);
+                    let maxNum = 0;
+                    registrosCarregados.forEach(item => {
+                        if (item.pasta && item.pasta.startsWith(letra + '-')) {
+                            let partes = item.pasta.split('-');
+                            let num = parseInt(partes[1]);
+                            if (!isNaN(num) && num > maxNum) maxNum = num;
+                        }
+                    });
+                    dadosForm.pasta = `${letra}-${maxNum + 1}`;
                 }
                 registrosCarregados.push(dadosForm);
                 mostrarMensagem("Processo cadastrado com sucesso!");
             } else {
-                // Mantém o histórico existente
-                if (registrosCarregados[editIndex] && registrosCarregados[editIndex].historicoServicos) {
-                    dadosForm.historicoServicos = registrosCarregados[editIndex].historicoServicos;
-                }
-                dadosForm.pasta = registrosCarregados[editIndex].pasta; // Mantém a pasta original
+                dadosForm.pasta = registrosCarregados[editIndex].pasta;
                 registrosCarregados[editIndex] = dadosForm;
                 mostrarMensagem("Processo atualizado com sucesso!");
             }
@@ -1387,73 +1247,47 @@
 
         function editarRegistro(index) {
             const item = registrosCarregados[index];
-            if (!item) return;
-            
             document.getElementById('editIndex').value = index;
             document.getElementById('pasta').value = item.pasta;
-            document.getElementById('numProces').value = item.numProces || '';
-            document.getElementById('dataNasc').value = item.dataNasc || '';
-            document.getElementById('endereco').value = item.endereco || '';
+            document.getElementById('numProces').value = item.numProces;
+            document.getElementById('dataNasc').value = item.dataNasc;
+            document.getElementById('endereco').value = item.endereco;
             document.getElementById('cidade').value = item.cidade || 'Paranoá';
-            document.getElementById('assuntoInput').value = item.assunto || '';
-            document.getElementById('conselheiro').value = item.conselheiro || '';
-            document.getElementById('processoSeiNum').value = item.processoSeiNum || '';
+            document.getElementById('assuntoInput').value = item.assunto;
+            document.getElementById('conselheiro').value = item.conselheiro;
+            document.getElementById('processoSeiNum').value = item.processoSeiNum;
 
-            // Preenche crianças
             const criancasContainer = document.getElementById('criancasContainer');
             criancasContainer.innerHTML = '';
-            if (item.nomeCrianca) {
-                item.nomeCrianca.split(',').forEach(c => {
-                    if (c.trim()) {
-                        criancasContainer.innerHTML += `<div class="dynamic-item"><input type="text" class="nomeCrianca" value="${c.trim()}" placeholder="Nome Completo" oninput="calcularPastaAutomatica()"></div>`;
-                    }
-                });
-            }
-            if (criancasContainer.children.length === 0) {
-                criancasContainer.innerHTML = '<div class="dynamic-item"><input type="text" class="nomeCrianca" placeholder="Nome Completo" oninput="calcularPastaAutomatica()"></div>';
-            }
+            item.nomeCrianca.split(',').forEach(c => {
+                criancasContainer.innerHTML += `<div class="dynamic-item"><input type="text" class="nomeCrianca" value="${c.trim()}" placeholder="Nome Completo" oninput="calcularPastaAutomatica()"></div>`;
+            });
 
-            // Preenche responsáveis
             const respContainer = document.getElementById('responsaveisContainer');
             respContainer.innerHTML = '';
-            if (item.nomeResponsavel) {
-                item.nomeResponsavel.split(',').forEach(r => {
-                    if (r.trim()) {
-                        respContainer.innerHTML += `<div class="dynamic-item"><input type="text" class="nomeResponsavel" value="${r.trim()}" placeholder="Nome Completo"></div>`;
-                    }
-                });
-            }
-            if (respContainer.children.length === 0) {
-                respContainer.innerHTML = '<div class="dynamic-item"><input type="text" class="nomeResponsavel" placeholder="Nome Completo"></div>';
-            }
+            item.nomeResponsavel.split(',').forEach(r => {
+                if(r.trim()) respContainer.innerHTML += `<div class="dynamic-item"><input type="text" class="nomeResponsavel" value="${r.trim()}" placeholder="Nome Completo"></div>`;
+            });
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            mostrarMensagem("Dados carregados para edição. Clique em Salvar para confirmar.");
         }
 
         function removerRegistro(index) {
-            if (confirm("Excluir este registro permanentemente?")) {
-                registrosCarregados.splice(index, 1);
+            if(confirm("Excluir este registro?")) { 
+                registrosCarregados.splice(index, 1); 
                 salvarDadosLocalStorage();
-                atualizarTabelaTela(registrosCarregados);
+                atualizarTabelaTela(registrosCarregados); 
                 atualizarDashboardEstatisticas();
-                mostrarMensagem("Registro excluído com sucesso!");
             }
         }
 
-        function tentarLimparFormulario() {
-            if (document.getElementById('editIndex').value !== "-1") {
-                if (!confirm("Você está editando um registro. Deseja cancelar a edição e limpar o formulário?")) {
-                    return;
-                }
-            }
-            document.getElementById('processoForm').reset();
+        function tentarLimparFormulario() { 
+            document.getElementById('processoForm').reset(); 
             document.getElementById('editIndex').value = '-1';
             document.getElementById('pasta').value = '';
             document.getElementById('cidade').value = 'Paranoá';
             document.getElementById('criancasContainer').innerHTML = '<div class="dynamic-item"><input type="text" class="nomeCrianca" placeholder="Nome Completo" oninput="calcularPastaAutomatica()"></div>';
             document.getElementById('responsaveisContainer').innerHTML = '<div class="dynamic-item"><input type="text" class="nomeResponsavel" placeholder="Nome Completo"></div>';
-            document.getElementById('statusBox').style.display = 'none';
         }
 
         function pesquisarProcessos() {
@@ -1467,8 +1301,7 @@
                 (item.nomeResponsavel && item.nomeResponsavel.toLowerCase().includes(termo)) ||
                 (item.numProces && item.numProces.toLowerCase().includes(termo)) ||
                 (item.assunto && item.assunto.toLowerCase().includes(termo)) ||
-                (item.pasta && item.pasta.toLowerCase().includes(termo)) ||
-                (item.cidade && item.cidade.toLowerCase().includes(termo))
+                (item.pasta && item.pasta.toLowerCase().includes(termo))
             );
             atualizarTabelaTela(filtrados);
         }
@@ -1480,28 +1313,17 @@
             const tbody = document.querySelector('#tabelaRegistros tbody');
             tbody.innerHTML = '';
             document.getElementById('contadorRegistros').innerText = `Total: ${listaExibicao.length} registros`;
-            
             if (listaExibicao.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; color: #64748b; padding: 20px;">Nenhum dado cadastrado ainda.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; color: #64748b; padding: 20px;">Nenhum dado encontrado.</td></tr>';
                 return;
             }
-            
-            listaExibicao.forEach((item, idx) => {
+            listaExibicao.forEach((item) => {
                 let indexReal = registrosCarregados.indexOf(item);
                 let qtdServicos = item.historicoServicos ? item.historicoServicos.length : 0;
                 let badgeServicos = qtdServicos > 0 ? ` <span style="background: #8b5cf6; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px;" title="${qtdServicos} serviços extras">${qtdServicos}</span>` : '';
 
                 tbody.innerHTML += `<tr>
-                    <td><strong>${item.pasta || '-'}</strong></td>
-                    <td>${item.numProces || '-'}</td>
-                    <td>${item.nomeCrianca || '-'}</td>
-                    <td>${item.dataNasc || '-'}</td>
-                    <td>${item.nomeResponsavel || '-'}</td>
-                    <td>${item.endereco || '-'}</td>
-                    <td>${item.cidade || '-'}</td>
-                    <td>${item.assunto || '-'}</td>
-                    <td>${item.conselheiro || '-'}</td>
-                    <td>${item.processoSeiNum || '-'}</td>
+                    <td><strong>${item.pasta}</strong></td><td>${item.numProces}</td><td>${item.nomeCrianca}</td><td>${item.dataNasc}</td><td>${item.nomeResponsavel}</td><td>${item.endereco}</td><td>${item.cidade}</td><td>${item.assunto}</td><td>${item.conselheiro}</td><td>${item.processoSeiNum}</td>
                     <td style="text-align: center; white-space: nowrap;">
                         <button type="button" class="btn-acao btn-historico" onclick="abrirHistoricoServicos(${indexReal})" title="Histórico de Serviços Prestados">${badgeServicos} <i class="fa-solid fa-clock-rotate-left"></i></button>
                         <button type="button" class="btn-acao btn-editar" onclick="editarRegistro(${indexReal})" title="Editar"><i class="fa-solid fa-pen"></i></button>
@@ -1547,30 +1369,29 @@
                 let cidade = item.cidade ? item.cidade.trim() : 'Paranoá';
 
                 consolidadosAssuntos[assunto] = (consolidadosAssuntos[assunto] || 0) + 1;
-                if (cidade) {
+                if(cidade) {
                     consolidadosCidades[cidade] = (consolidadosCidades[cidade] || 0) + 1;
                 }
             });
 
             baseAtendimentosFiltrada.forEach(item => {
                 let assunto = item.assunto ? item.assunto.toUpperCase().trim() : 'ATENDIMENTO RECEPÇÃO';
-                let cidade = item.cidade ? item.cidade.trim() : 'Paranoá';
+                let cidade = item.endereco ? item.endereco.trim() : (item.cidade ? item.cidade.trim() : 'Paranoá');
 
                 consolidadosAssuntos[assunto] = (consolidadosAssuntos[assunto] || 0) + 1;
-                if (cidade) {
+                if(cidade) {
                     consolidadosCidades[cidade] = (consolidadosCidades[cidade] || 0) + 1;
                 }
             });
 
-            // Atualiza lista de assuntos
             const listaAssuntosEl = document.getElementById('listaAssuntosDash');
             listaAssuntosEl.innerHTML = '';
             let totalGeralAssuntos = 0;
 
-            let assuntosOrdenados = Object.entries(consolidadosAssuntos).sort((a, b) => b[1] - a[1]);
+            let assuntosOrdenados = Object.entries(consolidadosAssuntos).sort((a,b) => b[1] - a[1]);
             
             if (assuntosOrdenados.length === 0) {
-                listaAssuntosEl.innerHTML = '<li style="color: #64748b; text-align: center; display: block; padding: 15px;">Nenhum assunto registrado neste período.</li>';
+                listaAssuntosEl.innerHTML = '<li style="color: #64748b; text-align: center; display: block; padding: 15px;">Nenhum assunto registrado neste mês.</li>';
                 document.getElementById('totalAssuntosCount').innerText = '0';
             } else {
                 assuntosOrdenados.forEach(([assunto, qtd]) => {
@@ -1580,13 +1401,12 @@
                 document.getElementById('totalAssuntosCount').innerText = totalGeralAssuntos;
             }
 
-            // Atualiza lista de cidades
             const listaCidadesEl = document.getElementById('listaCidadesDash');
             listaCidadesEl.innerHTML = '';
-            let cidadesOrdenadas = Object.entries(consolidadosCidades).sort((a, b) => b[1] - a[1]);
+            let cidadesOrdenadas = Object.entries(consolidadosCidades).sort((a,b) => b[1] - a[1]);
 
             if (cidadesOrdenadas.length === 0) {
-                listaCidadesEl.innerHTML = '<li style="color: #64748b; text-align: center; display: block; padding: 15px;">Nenhuma região registrada neste período.</li>';
+                listaCidadesEl.innerHTML = '<li style="color: #64748b; text-align: center; display: block; padding: 15px;">Nenhuma região registrada neste mês.</li>';
                 document.getElementById('regiaoDestaque').innerText = 'Destaque: ---';
             } else {
                 let regiaoMaisAtendida = cidadesOrdenadas[0][0];
@@ -1605,16 +1425,15 @@
         function abrirHistoricoServicos(index) {
             document.getElementById('historicoIndexAtual').value = index;
             const item = registrosCarregados[index];
-            if (!item) return;
             
             document.getElementById('modalTituloPasta').innerHTML = `<i class="fa-solid fa-clock-rotate-left"></i> Histórico de Serviços - Pasta: ${item.pasta}`;
-            document.getElementById('modalSubInfo').innerText = `Criança/Adolescente: ${item.nomeCrianca || '---'} | Responsável: ${item.nomeResponsavel || '---'}`;
+            document.getElementById('modalSubInfo').innerText = `Criança/Adolescente: ${item.nomeCrianca} | Responsável: ${item.nomeResponsavel || '---'}`;
             
             document.getElementById('novoServicoData').value = new Date().toLocaleDateString('pt-BR');
             document.getElementById('novoServicoConselheiro').value = item.conselheiro || '';
             document.getElementById('novoServicoDescricao').value = '';
 
-            atualizarTabelaHistoricoModal(item.historicoServicos || []);
+            atualizarTabelaHistoricoModal(item.historicoServicos);
             document.getElementById('modalHistorico').style.display = 'flex';
         }
 
@@ -1629,12 +1448,7 @@
             const descricaoServico = document.getElementById('novoServicoDescricao').value.trim();
 
             if (!descricaoServico) {
-                mostrarMensagem("Preencha a descrição do serviço!", true);
-                return;
-            }
-
-            if (!registrosCarregados[index]) {
-                mostrarMensagem("Registro não encontrado!", true);
+                alert("Por favor, preencha a descrição do serviço oferecido/demanda!");
                 return;
             }
 
@@ -1657,14 +1471,11 @@
 
         function removerServicoHistorico(servicoIndex) {
             const index = parseInt(document.getElementById('historicoIndexAtual').value);
-            if (!confirm("Remover este serviço do histórico?")) return;
-            
-            if (registrosCarregados[index] && registrosCarregados[index].historicoServicos) {
+            if (confirm("Deseja remover este serviço do histórico?")) {
                 registrosCarregados[index].historicoServicos.splice(servicoIndex, 1);
                 salvarDadosLocalStorage();
                 atualizarTabelaHistoricoModal(registrosCarregados[index].historicoServicos);
                 atualizarTabelaTela(registrosCarregados);
-                mostrarMensagem("Serviço removido do histórico.");
             }
         }
 
@@ -1679,9 +1490,9 @@
 
             listaServicos.forEach((serv, sIndex) => {
                 tbody.innerHTML += `<tr>
-                    <td>${serv.data || '-'}</td>
-                    <td><strong>${serv.conselheiro || '-'}</strong></td>
-                    <td>${serv.descricao || '-'}</td>
+                    <td>${serv.data}</td>
+                    <td><strong>${serv.conselheiro}</strong></td>
+                    <td>${serv.descricao}</td>
                     <td style="text-align: center;"><button type="button" class="btn-acao btn-deletar" onclick="removerServicoHistorico(${sIndex})" title="Excluir item"><i class="fa-solid fa-trash"></i></button></td>
                 </tr>`;
             });
@@ -1692,8 +1503,6 @@
         // ========================================================================
         function imprimirCapa(index) {
             const item = registrosCarregados[index];
-            if (!item) return;
-            
             const janelaImpressao = window.open('', '_blank', 'width=800,height=900');
             
             let enderecoCompleto = item.endereco || '';
@@ -1770,23 +1579,15 @@
             const nome = document.getElementById('atendNome').value.trim();
             const assunto = document.getElementById('atendAssuntoInput').value.trim();
             const cidade = document.getElementById('atendCidade').value.trim();
-            
-            if (!nome) {
-                mostrarMensagem("Preencha o nome da pessoa atendida!", true);
-                return;
-            }
-            if (!assunto) {
-                mostrarMensagem("Preencha o assunto do atendimento!", true);
-                return;
-            }
+            if(!nome || !assunto) { alert("Preencha o Nome e o Assunto!"); return; }
 
             const novoAtendimento = {
                 dataHora: document.getElementById('atendDataHora').value,
                 dataRegistro: new Date().toLocaleDateString('pt-BR'),
                 nome: nome,
-                cidade: cidade || 'Paranoá',
-                assunto: assunto,
-                id: Date.now()
+                endereco: cidade,
+                cidade: cidade,
+                assunto: assunto
             };
 
             atendimentosRegistrados.push(novoAtendimento);
@@ -1794,23 +1595,21 @@
             atualizarDashboardEAtendimentos();
             atualizarDashboardEstatisticas();
             limparFormAtendimento();
-            mostrarMensagem("Atendimento registrado com sucesso!");
+            mostrarMensagem("Ato de atendimento registrado com sucesso!");
         }
 
         function limparFormAtendimento() {
-            document.getElementById('atendNome').value = '';
+            document.getElementById('atendimentoForm').reset();
             document.getElementById('atendCidade').value = 'Paranoá';
-            document.getElementById('atendAssuntoInput').value = '';
             atualizarDataHoraAtual();
         }
 
         function removerAtendimento(index) {
-            if (confirm("Deseja excluir este registro de atendimento?")) {
+            if(confirm("Deseja excluir este registro de atendimento?")) {
                 atendimentosRegistrados.splice(index, 1);
                 salvarDadosLocalStorage();
                 atualizarDashboardEAtendimentos();
                 atualizarDashboardEstatisticas();
-                mostrarMensagem("Atendimento excluído!");
             }
         }
 
@@ -1829,19 +1628,13 @@
                 return;
             }
 
-            // Ordena por data (mais recente primeiro)
-            const sorted = [...atendimentosRegistrados].reverse();
-
-            sorted.forEach((item, idx) => {
-                const indexReal = atendimentosRegistrados.indexOf(item);
+            atendimentosRegistrados.forEach((item, index) => {
                 tbody.innerHTML += `<tr>
-                    <td>${item.dataHora || '-'}</td>
+                    <td>${item.dataHora}</td>
                     <td><strong>${item.nome}</strong></td>
                     <td>${item.cidade || 'Paranoá'}</td>
                     <td><span style="background: #e0f2fe; color: #0369a1; padding: 3px 8px; border-radius: 4px; font-weight: 600;">${item.assunto}</span></td>
-                    <td style="text-align: center;">
-                        <button type="button" class="btn-acao btn-deletar" onclick="removerAtendimento(${indexReal})" title="Excluir"><i class="fa-solid fa-trash"></i></button>
-                    </td>
+                    <td style="text-align: center;"><button type="button" class="btn-acao btn-deletar" onclick="removerAtendimento(${index})"><i class="fa-solid fa-trash"></i></button></td>
                 </tr>`;
             });
         }
@@ -1855,6 +1648,8 @@
         });
 
         console.log('✅ Sistema completo carregado!');
+        console.log(`📊 ${registrosCarregados.length} processos cadastrados`);
+        console.log(`📋 ${atendimentosRegistrados.length} atendimentos registrados`);
     </script>
 </body>
 </html>
