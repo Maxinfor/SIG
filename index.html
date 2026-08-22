@@ -290,8 +290,6 @@
             font-weight: 600;
         }
         .btn-deletar { background-color: var(--danger-color); color: #fff; }
-        .btn-editar { background-color: var(--warning-color); color: #fff; }
-        .btn-historico { background-color: #8b5cf6; color: #fff; }
 
         .search-box-container {
             display: flex;
@@ -344,7 +342,7 @@
             <div class="upload-section">
                 <label><i class="fa-solid fa-file-excel"></i> Carregar Planilha Excel (.xlsx):</label>
                 <input type="file" id="excelFile" accept=".xlsx, .xls" onchange="processarPlanilha(event)">
-                <p style="font-size: 12px; color: #64748b; margin-top: 6px; margin-bottom: 0;">A planilha deve conter as colunas equivalentes na ordem padrão ou com cabeçalhos correspondentes.</p>
+                <p style="font-size: 12px; color: #64748b; margin-top: 6px; margin-bottom: 0;">A planilha preencherá automaticamente a pasta com a 1ª letra do nome + posição da linha (Ex: A-1).</p>
             </div>
 
             <form id="processoForm">
@@ -457,7 +455,6 @@
     </div>
 
     <script>
-        // Array global para armazenar os registros
         let listaRegistros = [];
 
         function calcularPastaAutomatica() {
@@ -495,7 +492,6 @@
             container.appendChild(div);
         }
 
-        // Função responsável por ler o arquivo Excel carregado
         function processarPlanilha(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -508,7 +504,6 @@
                     const firstSheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[firstSheetName];
                     
-                    // Converte a planilha em formato JSON (array de linhas)
                     const jsonRows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
                     
                     if (jsonRows.length <= 1) {
@@ -516,17 +511,24 @@
                         return;
                     }
 
-                    // Ignora a linha 0 (cabeçalho) e processa as demais linhas
-                    // Ordem esperada das colunas no Excel (ajuste conforme sua planilha):
-                    // 0: Pasta, 1: Nº Processo, 2: Criança, 3: Data Nasc, 4: Responsável, 5: Endereço, 6: Cidade, 7: Assunto, 8: Conselheiro, 9: Processo SEI
+                    // Processa as linhas a partir da linha 1 (ignorando o cabeçalho 0)
                     for (let i = 1; i < jsonRows.length; i++) {
                         const row = jsonRows[i];
                         if (!row || row.length === 0) continue;
 
+                        const nomeCrianca = row[2] || '';
+                        const primeiraLetra = nomeCrianca.trim() ? nomeCrianca.trim().charAt(0).toUpperCase() : 'X';
+                        
+                        // Posição/número da linha na planilha (i)
+                        const numeroLinha = i; 
+
+                        // Gera o padrão exato: Letra + Hífen + Número da linha (Ex: A-1)
+                        const pastaGerada = `${primeiraLetra}-${numeroLinha}`;
+
                         const novoRegistro = {
-                            pasta: row[0] || '',
+                            pasta: pastaGerada,
                             numProces: row[1] || '',
-                            crianca: row[2] || '',
+                            crianca: nomeCrianca,
                             dataNasc: row[3] || '',
                             responsavel: row[4] || '',
                             endereco: row[5] || '',
