@@ -159,34 +159,6 @@
             box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
         }
 
-        .autocomplete-items {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            z-index: 99;
-            background-color: #fff;
-            border: 1px solid var(--border-color);
-            border-top: none;
-            border-radius: 0 0 6px 6px;
-            max-height: 200px;
-            overflow-y: auto;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .autocomplete-items div {
-            padding: 10px 12px;
-            cursor: pointer;
-            font-size: 13px;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-        .autocomplete-items div:hover {
-            background-color: #e0f2fe;
-            color: #0369a1;
-            font-weight: 600;
-        }
-
         .dynamic-list { 
             display: flex; 
             flex-direction: column; 
@@ -251,9 +223,6 @@
         .btn-excluir { background-color: #64748b; }
         .btn-excluir:hover { background-color: #475569; }
 
-        .btn-colar { background-color: var(--secondary-color); color: white; margin-top: 8px; padding: 8px 14px; font-size: 13px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer;}
-        .btn-colar:hover { background-color: #0284c7; }
-
         .status-box { 
             margin-top: 15px; 
             padding: 12px; 
@@ -263,18 +232,6 @@
             font-weight: 500;
             display: none; 
             border-left: 4px solid var(--success-color);
-        }
-
-        textarea.paste-area { 
-            width: 100%; 
-            height: 60px; 
-            margin-top: 6px; 
-            padding: 10px; 
-            border: 1px dashed var(--border-color); 
-            border-radius: 6px; 
-            font-family: monospace; 
-            font-size: 12px; 
-            resize: vertical;
         }
         
         .table-header-flex {
@@ -334,101 +291,7 @@
         }
         .btn-deletar { background-color: var(--danger-color); color: #fff; }
         .btn-editar { background-color: var(--warning-color); color: #fff; }
-        .btn-imprimir { background-color: var(--primary-color); color: #fff; }
         .btn-historico { background-color: #8b5cf6; color: #fff; }
-
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-content {
-            background: #fff;
-            padding: 30px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 750px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
-
-        .dashboard-container-wrap {
-            margin-bottom: 24px;
-        }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 16px;
-        }
-
-        .dash-box {
-            background: #fff;
-            border: 1px solid var(--border-color);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        }
-
-        .dash-box h4 {
-            margin: 0 0 12px 0;
-            font-size: 14px;
-            color: var(--primary-color);
-            text-transform: uppercase;
-            border-bottom: 2px solid #f1f5f9;
-            padding-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .dash-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            max-height: 180px;
-            overflow-y: auto;
-        }
-
-        .dash-list li {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 0;
-            border-bottom: 1px dashed #f1f5f9;
-            font-size: 13px;
-        }
-
-        .dash-badge {
-            background: #e0f2fe;
-            color: #0369a1;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-weight: bold;
-            font-size: 12px;
-        }
-
-        .filter-periodo {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            background: #f1f5f9;
-            padding: 12px 18px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid var(--border-color);
-        }
-
-        .filter-periodo select {
-            padding: 6px 12px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            font-weight: 600;
-        }
 
         .search-box-container {
             display: flex;
@@ -447,25 +310,6 @@
             border-radius: 6px;
             font-size: 14px;
         }
-
-        .btn-toggle-dash {
-            background-color: #475569;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            font-size: 13px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 15px;
-            transition: background-color 0.2s;
-        }
-        .btn-toggle-dash:hover {
-            background-color: #334155;
-        }
     </style>
 </head>
 <body>
@@ -482,64 +326,11 @@
         <button type="button" class="tab-btn active" onclick="alternarAba('processosTab', this)">
             <i class="fa-solid fa-folder-tree"></i> Gestão de Processos
         </button>
-        <button type="button" class="tab-btn" onclick="alternarAba('atendimentoTab', this)">
-            <i class="fa-solid fa-headset"></i> Atos de Atendimento (Recepção)
-        </button>
     </div>
 
     <!-- ================= ABA 1: GESTÃO DE PROCESSOS ================= -->
     <div id="processosTab" class="tab-content active">
         
-        <button type="button" id="btnToggleDash" class="btn-toggle-dash" onclick="toggleDashboard()">
-            <i class="fa-solid fa-eye-slash" id="iconToggleDash"></i> <span id="textToggleDash">Esconder Dashboard Estatístico</span>
-        </button>
-
-        <div id="dashboardContainerWrap" class="container dashboard-container-wrap" style="background: linear-gradient(to bottom, #ffffff, #f8fafc);">
-            <div class="table-header-flex">
-                <h3><i class="fa-solid fa-chart-pie"></i> Dashboard Estatístico de Atendimentos</h3>
-            </div>
-            
-            <div class="filter-periodo">
-                <label style="font-weight: 600; font-size: 13px; color: #475569;"><i class="fa-solid fa-calendar-days"></i> Filtrar Referência Mensal:</label>
-                <select id="filtroMes" onchange="atualizarDashboardEstatisticas()">
-                    <option value="todos">Todos os Meses (Geral)</option>
-                    <option value="01">Janeiro</option>
-                    <option value="02">Fevereiro</option>
-                    <option value="03">Março</option>
-                    <option value="04">Abril</option>
-                    <option value="05">Maio</option>
-                    <option value="06">Junho</option>
-                    <option value="07">Julho</option>
-                    <option value="08">Agosto</option>
-                    <option value="09">Setembro</option>
-                    <option value="10">Outubro</option>
-                    <option value="11">Novembro</option>
-                    <option value="12">Dezembro</option>
-                </select>
-                <select id="filtroAno" onchange="atualizarDashboardEstatisticas()">
-                    <option value="2026">2026</option>
-                    <option value="2025">2025</option>
-                    <option value="2024">2024</option>
-                </select>
-            </div>
-
-            <div class="dashboard-grid">
-                <div class="dash-box">
-                    <h4><span><i class="fa-solid fa-list-check"></i> Total por Assunto</span> <span id="totalAssuntosCount" class="dash-badge">0</span></h4>
-                    <ul id="listaAssuntosDash" class="dash-list">
-                        <li style="color: #64748b; text-align: center; display: block; padding: 15px;">Nenhum dado no período.</li>
-                    </ul>
-                </div>
-
-                <div class="dash-box">
-                    <h4><span><i class="fa-solid fa-map-location-dot"></i> Regiões / Localidades</span> <span id="regiaoDestaque" style="font-size: 11px; color: #0284c7; font-weight: bold;">Destaque: ---</span></h4>
-                    <ul id="listaCidadesDash" class="dash-list">
-                        <li style="color: #64748b; text-align: center; display: block; padding: 15px;">Nenhum dado no período.</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
         <div class="container">
             <div class="table-header-flex">
                 <h3><i class="fa-solid fa-magnifying-glass"></i> Pesquisar Processos / Cadastros</h3>
@@ -551,14 +342,9 @@
 
         <div class="container">
             <div class="upload-section">
-                <label><i class="fa-solid fa-file-excel"></i> 1. Carregar Planilha Excel (.xlsx):</label>
+                <label><i class="fa-solid fa-file-excel"></i> Carregar Planilha Excel (.xlsx):</label>
                 <input type="file" id="excelFile" accept=".xlsx, .xls" onchange="processarPlanilha(event)">
-                
-                <div style="margin-top: 15px;">
-                    <label><i class="fa-solid fa-clipboard"></i> 2. Ou cole os dados copiados do Excel aqui (Ctrl + V):</label>
-                    <textarea id="pasteInput" class="paste-area" placeholder="Clique aqui e pressione Ctrl+V para colar as linhas copiadas do Excel..." onpaste="processarDadosColados(event)"></textarea>
-                    <button type="button" class="btn-colar" onclick="clicarColar()"><i class="fa-solid fa-bolt"></i> Processar Texto Colado</button>
-                </div>
+                <p style="font-size: 12px; color: #64748b; margin-top: 6px; margin-bottom: 0;">A planilha deve conter as colunas equivalentes na ordem padrão ou com cabeçalhos correspondentes.</p>
             </div>
 
             <form id="processoForm">
@@ -609,10 +395,9 @@
                         <input type="text" id="cidade" value="Paranoá" readonly style="background-color: #f1f5f9; font-weight: 600;">
                     </div>
                     
-                    <div class="form-group" style="position: relative;">
-                        <label>Assunto (Digite para buscar)</label>
-                        <input type="text" id="assuntoInput" placeholder="Comece a digitar o assunto..." autocomplete="off">
-                        <div id="assuntoAutocompleteList" class="autocomplete-items"></div>
+                    <div class="form-group">
+                        <label>Assunto</label>
+                        <input type="text" id="assuntoInput" placeholder="Digite o assunto...">
                     </div>
 
                     <div class="form-group">
@@ -671,134 +456,10 @@
         </div>
     </div>
 
-    <!-- ================= ABA 2: ATOS DE ATENDIMENTO ================= -->
-    <div id="atendimentoTab" class="tab-content">
-        <div class="dashboard-grid" style="margin-bottom: 24px;">
-            <div class="dash-box" style="background: linear-gradient(135deg, #1e3a8a, #0ea5e9); color: white;">
-                <h4 style="color: white; border-bottom: 1px solid rgba(255,255,255,0.2);">Total de Atendimentos Recepção</h4>
-                <p class="number" id="dashTotalAtendimentos" style="font-size: 28px; font-weight: bold; margin: 0;">0</p>
-            </div>
-            <div class="dash-box" style="background: linear-gradient(135deg, #059669, #10b981); color: white;">
-                <h4 style="color: white; border-bottom: 1px solid rgba(255,255,255,0.2);">Pessoas Diferentes Atendidas</h4>
-                <p class="number" id="dashPessoasUnicas" style="font-size: 28px; font-weight: bold; margin: 0;">0</p>
-            </div>
-        </div>
-
-        <div class="container">
-            <div class="table-header-flex">
-                <h3><i class="fa-solid fa-pen-to-square"></i> Registrar Novo Ato de Atendimento (Administrativo / Recepção)</h3>
-                <span style="font-size: 12px; color: #64748b;"><i class="fa-solid fa-clock"></i> Data atual: <span id="spanDataHoje"></span></span>
-            </div>
-            
-            <form id="atendimentoForm">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Nome</label>
-                        <input type="text" id="atendNome" placeholder="Nome completo da pessoa atendida" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Localidade / Região</label>
-                        <input type="text" id="atendCidade" value="Paranoá" readonly style="background-color: #f1f5f9; font-weight: 600;">
-                    </div>
-
-                    <div class="form-group" style="position: relative;">
-                        <label>Assunto (Digite para buscar)</label>
-                        <input type="text" id="atendAssuntoInput" placeholder="Comece a digitar o assunto..." autocomplete="off">
-                        <div id="atendAssuntoAutocompleteList" class="autocomplete-items"></div>
-                    </div>
-
-                    <div class="form-group" style="grid-column: span 3;">
-                        <label>Data e Hora do Atendimento</label>
-                        <input type="text" id="atendDataHora" readonly style="background-color: #f1f5f9; font-weight: 600;">
-                    </div>
-                </div>
-
-                <div class="actions">
-                    <button type="button" class="btn-main btn-cadastrar" onclick="salvarAtendimento()"><i class="fa-solid fa-check"></i> Salvar Atendimento</button>
-                    <button type="button" class="btn-main btn-excluir" onclick="limparFormAtendimento()"><i class="fa-solid fa-rotate-right"></i> Limpar</button>
-                </div>
-            </form>
-        </div>
-
-        <div class="container">
-            <div class="table-header-flex">
-                <h3><i class="fa-solid fa-list-check"></i> Todos os Atendimentos Registrados</h3>
-                <span id="contadorAtendimentos" style="font-size: 13px; color: #64748b; font-weight: 600;">Total: 0</span>
-            </div>
-            
-            <div class="table-container">
-                <table id="tabelaAtendimentos">
-                    <thead>
-                        <tr>
-                            <th>Data/Hora</th>
-                            <th>Nome</th>
-                            <th>Localidade</th>
-                            <th>Assunto</th>
-                            <th style="text-align: center;">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td colspan="5" style="text-align: center; color: #64748b; padding: 20px;">Nenhum atendimento registrado.</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- ================= MODAL DE HISTÓRICO ================= -->
-    <div id="modalHistorico" class="modal-overlay">
-        <div class="modal-content">
-            <div class="table-header-flex">
-                <h3 id="modalTituloPasta"><i class="fa-solid fa-clock-rotate-left"></i> Histórico de Serviços da Pasta</h3>
-                <button type="button" class="btn-remove" onclick="fecharModalHistorico()" style="padding: 6px 12px; font-size: 14px;"><i class="fa-solid fa-xmark"></i> Fechar</button>
-            </div>
-            
-            <p id="modalSubInfo" style="font-size: 13px; color: #64748b; margin-top: -5px; margin-bottom: 15px;"></p>
-
-            <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px;">
-                <h4 style="margin: 0 0 10px 0; font-size: 14px; color: var(--primary-color);"><i class="fa-solid fa-plus-circle"></i> Adicionar Novo Serviço / Retorno</h4>
-                <input type="hidden" id="historicoIndexAtual" value="-1">
-                <div class="form-grid" style="grid-template-columns: 1fr 2fr;">
-                    <div class="form-group">
-                        <label>Data do Atendimento</label>
-                        <input type="text" id="novoServicoData" placeholder="DD/MM/AAAA">
-                    </div>
-                    <div class="form-group">
-                        <label>Conselheiro(a) Responsável</label>
-                        <input type="text" id="novoServicoConselheiro" placeholder="Nome do conselheiro">
-                    </div>
-                    <div class="form-group" style="grid-column: span 2;">
-                        <label>Serviço Oferecido / Nova Demanda / Observações</label>
-                        <textarea id="novoServicoDescricao" placeholder="Ex: Retorno da mãe solicitando encaminhamento..." style="height: 60px; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px;"></textarea>
-                    </div>
-                </div>
-                <div style="margin-top: 12px;">
-                    <button type="button" class="btn-main btn-cadastrar" style="padding: 8px 16px; font-size: 13px;" onclick="adicionarNovoServicoNaPasta()"><i class="fa-solid fa-check"></i> Salvar Serviço no Histórico</button>
-                </div>
-            </div>
-
-            <h4 style="margin: 0 0 10px 0; font-size: 14px; color: var(--text-color);">Serviços Prestados Anteriormente:</h4>
-            <div class="table-container" style="max-height: 250px;">
-                <table id="tabelaHistoricoServicos">
-                    <thead>
-                        <tr>
-                            <th style="width: 20%;">Data</th>
-                            <th style="width: 25%;">Conselheiro(a)</th>
-                            <th style="width: 45%;">Serviço / Demanda Oferecida</th>
-                            <th style="width: 10%; text-align: center;">Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td colspan="4" style="text-align: center; color: #64748b; padding: 15px;">Nenhum serviço registrado.</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
     <script>
-        // Lógica de cálculo automático do campo Pasta (Primeira letra do nome + Número da planilha/processo)
+        // Array global para armazenar os registros
+        let listaRegistros = [];
+
         function calcularPastaAutomatica() {
             const inputsCrianca = document.querySelectorAll('.nomeCrianca');
             let primeiroNome = '';
@@ -818,28 +479,6 @@
             }
         }
 
-        function alternarAba(idAba, btn) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(idAba).classList.add('active');
-            btn.classList.add('active');
-        }
-
-        function toggleDashboard() {
-            const wrap = document.getElementById('dashboardContainerWrap');
-            const icon = document.getElementById('iconToggleDash');
-            const text = document.getElementById('textToggleDash');
-            if (wrap.style.display === 'none') {
-                wrap.style.display = 'block';
-                icon.className = 'fa-solid fa-eye-slash';
-                text.innerText = 'Esconder Dashboard Estatístico';
-            } else {
-                wrap.style.display = 'none';
-                icon.className = 'fa-solid fa-eye';
-                text.innerText = 'Mostrar Dashboard Estatístico';
-            }
-        }
-
         function adicionarCampoCrianca() {
             const container = document.getElementById('criancasContainer');
             const div = document.createElement('div');
@@ -856,8 +495,129 @@
             container.appendChild(div);
         }
 
+        // Função responsável por ler o arquivo Excel carregado
+        function processarPlanilha(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    
+                    // Converte a planilha em formato JSON (array de linhas)
+                    const jsonRows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                    
+                    if (jsonRows.length <= 1) {
+                        alert("A planilha está vazia ou contém apenas o cabeçalho.");
+                        return;
+                    }
+
+                    // Ignora a linha 0 (cabeçalho) e processa as demais linhas
+                    // Ordem esperada das colunas no Excel (ajuste conforme sua planilha):
+                    // 0: Pasta, 1: Nº Processo, 2: Criança, 3: Data Nasc, 4: Responsável, 5: Endereço, 6: Cidade, 7: Assunto, 8: Conselheiro, 9: Processo SEI
+                    for (let i = 1; i < jsonRows.length; i++) {
+                        const row = jsonRows[i];
+                        if (!row || row.length === 0) continue;
+
+                        const novoRegistro = {
+                            pasta: row[0] || '',
+                            numProces: row[1] || '',
+                            crianca: row[2] || '',
+                            dataNasc: row[3] || '',
+                            responsavel: row[4] || '',
+                            endereco: row[5] || '',
+                            cidade: row[6] || 'Paranoá',
+                            assunto: row[7] || '',
+                            conselheiro: row[8] || '',
+                            processoSei: row[9] || ''
+                        };
+
+                        listaRegistros.push(novoRegistro);
+                    }
+
+                    atualizarTabela();
+                    mostrarStatus(`${listaRegistros.length} registros carregados com sucesso da planilha!`);
+                } catch (error) {
+                    console.error("Erro ao ler o arquivo Excel:", error);
+                    alert("Erro ao processar o arquivo Excel. Verifique se o formato é válido.");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function atualizarTabela() {
+            const tbody = document.querySelector('#tabelaRegistros tbody');
+            tbody.innerHTML = '';
+
+            if (listaRegistros.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; color: #64748b; padding: 20px;">Nenhum dado cadastrado ainda.</td></tr>';
+                document.getElementById('contadorRegistros').innerText = 'Total: 0 registros';
+                return;
+            }
+
+            listaRegistros.forEach((reg, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${reg.pasta}</strong></td>
+                    <td>${reg.numProces}</td>
+                    <td>${reg.crianca}</td>
+                    <td>${reg.dataNasc}</td>
+                    <td>${reg.responsavel}</td>
+                    <td>${reg.endereco}</td>
+                    <td>${reg.cidade}</td>
+                    <td>${reg.assunto}</td>
+                    <td>${reg.conselheiro}</td>
+                    <td>${reg.processoSei}</td>
+                    <td style="text-align: center;">
+                        <button type="button" class="btn-acao btn-deletar" onclick="removerRegistro(${index})"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('contadorRegistros').innerText = `Total: ${listaRegistros.length} registros`;
+        }
+
         function salvarRegistro() {
-            alert('Função de salvamento pronta! (Integre com sua base de dados ou localStorage)');
+            const inputsCrianca = document.querySelectorAll('.nomeCrianca');
+            const criancas = Array.from(inputsCrianca).map(i => i.value.trim()).filter(v => v !== '').join(', ');
+
+            const inputsResp = document.querySelectorAll('.nomeResponsavel');
+            const responsaveis = Array.from(inputsResp).map(i => i.value.trim()).filter(v => v !== '').join(', ');
+
+            const novoRegistro = {
+                pasta: document.getElementById('pasta').value,
+                numProces: document.getElementById('numProces').value,
+                crianca: criancas,
+                dataNasc: document.getElementById('dataNasc').value,
+                responsavel: responsaveis,
+                endereco: document.getElementById('endereco').value,
+                cidade: document.getElementById('cidade').value,
+                assunto: document.getElementById('assuntoInput').value,
+                conselheiro: document.getElementById('conselheiro').value,
+                processoSei: document.getElementById('processoSeiNum').value
+            };
+
+            if (!novoRegistro.crianca) {
+                alert("Por favor, preencha o nome da criança.");
+                return;
+            }
+
+            listaRegistros.push(novoRegistro);
+            atualizarTabela();
+            tentarLimparFormulario();
+            mostrarStatus("Registro cadastrado com sucesso!");
+        }
+
+        function removerRegistro(index) {
+            if (confirm("Deseja realmente excluir este registro?")) {
+                listaRegistros.splice(index, 1);
+                atualizarTabela();
+            }
         }
 
         function tentarLimparFormulario() {
@@ -865,35 +625,28 @@
             document.getElementById('pasta').value = '';
         }
 
-        function processarPlanilha(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, {type: 'array'});
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
-                const json = XLSX.utils.sheet_to_json(worksheet, {header: 1});
-                console.log("Dados da planilha carregados:", json);
-                alert("Planilha carregada com sucesso!");
-            };
-            reader.readAsArrayBuffer(file);
+        function mostrarStatus(mensagem) {
+            const box = document.getElementById('statusBox');
+            box.innerText = mensagem;
+            box.style.display = 'block';
+            setTimeout(() => {
+                box.style.display = 'none';
+            }, 4000);
         }
 
-        function processarDadosColados(e) {}
-        function clicarColar() {}
-        function pesquisarProcessos() {}
-        function atualizarDashboardEstatisticas() {}
-        function salvarAtendimento() {}
-        function limparFormAtendimento() {}
-        function fecharModalHistorico() {}
-        function adicionarNovoServicoNaPasta() {}
-
-        // Data atual na recepção
-        const hoje = new Date();
-        document.getElementById('spanDataHoje').innerText = hoje.toLocaleDateString('pt-BR');
-        document.getElementById('atendDataHora').value = hoje.toLocaleString('pt-BR');
+        function pesquisarProcessos() {
+            const termo = document.getElementById('inputPesquisaProcessos').value.toLowerCase();
+            const linhas = document.querySelectorAll('#tabelaRegistros tbody tr');
+            
+            linhas.forEach(linha => {
+                const textoLinha = linha.innerText.toLowerCase();
+                if (textoLinha.includes(termo)) {
+                    linha.style.display = '';
+                } else {
+                    linha.style.display = 'none';
+                }
+            });
+        }
     </script>
 </body>
 </html>
