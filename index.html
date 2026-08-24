@@ -1,61 +1,997 @@
-<script>
-        // ================= LISTA DE ASSUNTOS COMUNS (CONSELHO TUTELAR) =================
-        const listaAssuntosComuns = [
-            "Acompanhamento Escolar / Frequência",
-            "Acolhimento Institucional (Abrigo)",
-            "Ameaça / Violação de Direitos",
-            "Atendimento Psicológico / Saúde Mental",
-            "Negligência / Abandono de Incapaz",
-            "Suspeita de Maus-Tratos / Violência Física",
-            "Violência Psicológica / Moral",
-            "Violência Sexual / Abuso",
-            "Trabalho Infantil",
-            "Disputa de Guarda / Conflito Familiar",
-            "Evasão Escolar",
-            "Falta de Vaga em Creche / Escola",
-            "Acesso a Medicamentos / Tratamento Médico",
-            "Ato Infracional",
-            "Orientação Familiar",
-            "Outros / Demanda Administrativa"
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema de Gestão - Conselho Tutelar</title>
+    <!-- Biblioteca SheetJS para leitura de arquivos Excel (.xlsx) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- FontAwesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #1e3a8a;
+            --primary-hover: #1e40af;
+            --secondary-color: #0ea5e9;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #cbd5e1;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 30px; 
+            background-color: var(--bg-color); 
+            color: var(--text-color); 
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            color: var(--primary-color);
+        }
+
+        .header-title-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        /* Sistema de Abas (Menu Superior) */
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+
+        .tab-btn {
+            background-color: #e2e8f0;
+            color: #475569;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn.active {
+            background-color: var(--primary-color);
+            color: #fff;
+        }
+
+        .tab-btn:hover:not(.active) {
+            background-color: #cbd5e1;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .container { 
+            background: var(--card-bg); 
+            padding: 24px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); 
+            margin-bottom: 24px; 
+        }
+
+        .upload-section { 
+            margin-bottom: 20px; 
+            padding: 18px; 
+            background: #f1f5f9; 
+            border-radius: 8px; 
+            border: 1px dashed var(--border-color);
+        }
+
+        .upload-section label {
+            font-weight: 600;
+            font-size: 14px;
+            display: block;
+            margin-bottom: 8px;
+            color: #475569;
+        }
+
+        .form-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 18px; 
+        }
+
+        @media (max-width: 1024px) {
+            .form-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 640px) {
+            .form-grid { grid-template-columns: 1fr; }
+        }
+
+        .form-group { 
+            display: flex; 
+            flex-direction: column; 
+            position: relative; /* Necessário para o autocomplete */
+        }
+
+        .form-group label { 
+            font-weight: 600; 
+            margin-bottom: 6px; 
+            font-size: 12px; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #475569;
+        }
+
+        .form-group input, .form-group select, .form-group textarea { 
+            padding: 10px 12px; 
+            border: 1px solid var(--border-color); 
+            border-radius: 6px; 
+            background-color: #fff; 
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+        }
+
+        /* Estilo para a Caixa de Sugestões de Autocomplete */
+        .autocomplete-items {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 99;
+            background-color: #fff;
+            border: 1px solid var(--border-color);
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            max-height: 200px;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .autocomplete-items div {
+            padding: 10px 12px;
+            cursor: pointer;
+            font-size: 13px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .autocomplete-items div:hover {
+            background-color: #e0f2fe;
+            color: #0369a1;
+            font-weight: 600;
+        }
+
+        .dynamic-list { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+            margin-bottom: 6px; 
+        }
+
+        .dynamic-item { 
+            display: flex; 
+            gap: 8px; 
+        }
+
+        .dynamic-item input { 
+            flex: 1; 
+        }
+
+        .btn-add { 
+            background-color: var(--secondary-color); 
+            color: #fff; 
+            border: none; 
+            padding: 6px 10px; 
+            font-size: 12px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            align-self: flex-start; 
+            font-weight: 600;
+        }
+
+        .btn-remove { 
+            background-color: var(--danger-color); 
+            color: #fff; 
+            border: none; 
+            padding: 0 10px; 
+            font-size: 12px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+        }
+
+        .actions { 
+            margin-top: 24px; 
+            display: flex; 
+            gap: 12px; 
+        }
+
+        button.btn-main { 
+            padding: 10px 20px; 
+            font-size: 14px; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            color: #fff; 
+            font-weight: 600; 
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .btn-cadastrar { background-color: var(--success-color); }
+        .btn-cadastrar:hover { background-color: #059669; }
+
+        .btn-excluir { background-color: #64748b; }
+        .btn-excluir:hover { background-color: #475569; }
+
+        .btn-colar { background-color: var(--secondary-color); color: white; margin-top: 8px; padding: 8px 14px; font-size: 13px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer;}
+        .btn-colar:hover { background-color: #0284c7; }
+
+        .status-box { 
+            margin-top: 15px; 
+            padding: 12px; 
+            background: #d1fae5; 
+            color: #065f46; 
+            border-radius: 6px; 
+            font-weight: 500;
+            display: none; 
+            border-left: 4px solid var(--success-color);
+        }
+
+        textarea.paste-area { 
+            width: 100%; 
+            height: 60px; 
+            margin-top: 6px; 
+            padding: 10px; 
+            border: 1px dashed var(--border-color); 
+            border-radius: 6px; 
+            font-family: monospace; 
+            font-size: 12px; 
+            resize: vertical;
+        }
+        
+        .table-header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .table-header-flex h3 {
+            margin: 0;
+            color: var(--primary-color);
+            font-size: 18px;
+        }
+
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 5px; 
+            font-size: 13px; 
+            background: #fff; 
+        }
+
+        th, td { 
+            border: 1px solid #e2e8f0; 
+            padding: 10px 12px; 
+            text-align: left; 
+        }
+
+        th { 
+            background-color: var(--primary-color); 
+            color: white; 
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+
+        tr:nth-child(even) { background-color: #f8fafc; }
+        tr:hover { background-color: #f1f5f9; }
+
+        .table-container { 
+            max-height: 450px; 
+            overflow-y: auto; 
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-acao { 
+            padding: 6px 10px; 
+            font-size: 12px; 
+            margin-right: 4px; 
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn-deletar { background-color: var(--danger-color); color: #fff; }
+        .btn-editar { background-color: var(--warning-color); color: #fff; }
+        .btn-imprimir { background-color: var(--primary-color); color: #fff; }
+        .btn-historico { background-color: #8b5cf6; color: #fff; }
+
+        /* Estilos do Modal de Histórico */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 750px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        /* Estilos de Dashboard Estatístico */
+        .dashboard-container-wrap {
+            margin-bottom: 24px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .dash-box {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .dash-box h4 {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dash-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .dash-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px dashed #f1f5f9;
+            font-size: 13px;
+        }
+
+        .dash-badge {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .filter-periodo {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            background: #f1f5f9;
+            padding: 12px 18px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .filter-periodo select {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            font-weight: 600;
+        }
+
+        .search-box-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .search-box-container input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .btn-toggle-dash {
+            background-color: #475569;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-size: 13px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            transition: background-color 0.2s;
+        }
+        .btn-toggle-dash:hover {
+            background-color: #334155;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-title">
+        <div class="header-title-left">
+            <i class="fa-solid fa-folder-open fa-2x"></i>
+            <h2>Sistema de Gestão - Conselho Tutelar <span style="font-size: 14px; display: block; color: #64748b; font-weight: 400;">Unidade Paranoá</span></h2>
+        </div>
+    </div>
+
+    <!-- MENU DE ABAS -->
+    <div class="nav-tabs">
+        <button type="button" class="tab-btn active" onclick="alternarAba('processosTab', this)">
+            <i class="fa-solid fa-folder-tree"></i> Gestão de Processos
+        </button>
+        <button type="button" class="tab-btn" onclick="alternarAba('atendimentoTab', this)">
+            <i class="fa-solid fa-headset"></i> Atos de Atendimento (Recepção)
+        </button>
+    </div>
+
+    <!-- ================= ABA 1: GESTÃO DE PROCESSOS ================= -->
+    <div id="processosTab" class="tab-content active">
+        
+        <!-- BOTÃO PARA ESCONDER / MOSTRAR O DASHBOARD -->
+        <button type="button" id="btnToggleDash" class="btn-toggle-dash" onclick="toggleDashboard()">
+            <i class="fa-solid fa-eye-slash" id="iconToggleDash"></i> <span id="textToggleDash">Esconder Dashboard Estatístico</span>
+        </button>
+
+        <!-- PAINEL DASHBOARD ESTATÍSTICO MENSAL -->
+        <div id="dashboardContainerWrap" class="container dashboard-container-wrap" style="background: linear-gradient(to bottom, #ffffff, #f8fafc);">
+            <div class="table-header-flex">
+                <h3><i class="fa-solid fa-chart-pie"></i> Dashboard Estatístico de Atendimentos</h3>
+            </div>
+            
+            <div class="filter-periodo">
+                <label style="font-weight: 600; font-size: 13px; color: #475569;"><i class="fa-solid fa-calendar-days"></i> Filtrar Referência Mensal:</label>
+                <select id="filtroMes" onchange="atualizarDashboardEstatisticas()">
+                    <option value="todos">Todos os Meses (Geral)</option>
+                    <option value="01">Janeiro</option>
+                    <option value="02">Fevereiro</option>
+                    <option value="03">Março</option>
+                    <option value="04">Abril</option>
+                    <option value="05">Maio</option>
+                    <option value="06">Junho</option>
+                    <option value="07">Julho</option>
+                    <option value="08">Agosto</option>
+                    <option value="09">Setembro</option>
+                    <option value="10">Outubro</option>
+                    <option value="11">Novembro</option>
+                    <option value="12">Dezembro</option>
+                </select>
+                <select id="filtroAno" onchange="atualizarDashboardEstatisticas()">
+                    <option value="2026">2026</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                </select>
+            </div>
+
+            <div class="dashboard-grid">
+                <!-- Card 1: Quantidade por Assunto -->
+                <div class="dash-box">
+                    <h4><span><i class="fa-solid fa-list-check"></i> Total por Assunto</span> <span id="totalAssuntosCount" class="dash-badge">0</span></h4>
+                    <ul id="listaAssuntosDash" class="dash-list">
+                        <li style="color: #64748b; text-align: center; display: block; padding: 15px;">Nenhum dado no período.</li>
+                    </ul>
+                </div>
+
+                <!-- Card 2: Região / Cidade Mais Atendida -->
+                <div class="dash-box">
+                    <h4><span><i class="fa-solid fa-map-location-dot"></i> Regiões / Localidades</span> <span id="regiaoDestaque" style="font-size: 11px; color: #0284c7; font-weight: bold;">Destaque: ---</span></h4>
+                    <ul id="listaCidadesDash" class="dash-list">
+                        <li style="color: #64748b; text-align: center; display: block; padding: 15px;">Nenhum dado no período.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Caixa de Pesquisa na Gestão de Processos -->
+        <div class="container">
+            <div class="table-header-flex">
+                <h3><i class="fa-solid fa-magnifying-glass"></i> Pesquisar Processos / Cadastros</h3>
+            </div>
+            <div class="search-box-container">
+                <input type="text" id="inputPesquisaProcessos" placeholder="Digite o nome da criança, responsável, número ou assunto..." oninput="pesquisarProcessos()">
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="upload-section">
+                <label><i class="fa-solid fa-file-excel"></i> 1. Carregar Planilha Excel (.xlsx):</label>
+                <input type="file" id="excelFile" accept=".xlsx, .xls" onchange="processarPlanilha(event)">
+                
+                <div style="margin-top: 15px;">
+                    <label><i class="fa-solid fa-clipboard"></i> 2. Ou cole os dados copiados do Excel aqui (Ctrl + V):</label>
+                    <textarea id="pasteInput" class="paste-area" placeholder="Clique aqui e pressione Ctrl+V para colar as linhas copiadas do Excel..." onpaste="processarDadosColados(event)"></textarea>
+                    <button type="button" class="btn-colar" onclick="clicarColar()"><i class="fa-solid fa-bolt"></i> Processar Texto Colado</button>
+                </div>
+            </div>
+
+            <form id="processoForm">
+                <input type="hidden" id="editIndex" value="-1">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Pasta (Gerada Automaticamente)</label>
+                        <input type="text" id="pasta" placeholder="Preencha o nome da criança abaixo" readonly style="background-color: #f1f5f9; font-weight: bold; color: var(--primary-color);">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Nº Processo</label>
+                        <input type="text" id="numProces" placeholder="Ex: 780/26">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Nome da Criança / Adolescente</label>
+                        <div id="criancasContainer" class="dynamic-list">
+                            <div class="dynamic-item">
+                                <input type="text" class="nomeCrianca" placeholder="Nome Completo" oninput="calcularPastaAutomatica()">
+                            </div>
+                        </div>
+                        <button type="button" class="btn-add" onclick="adicionarCampoCrianca()"><i class="fa-solid fa-plus"></i> Adicionar Criança</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Data Nasc.</label>
+                        <input type="text" id="dataNasc" placeholder="DD/MM/AAAA">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nome do Responsável</label>
+                        <div id="responsaveisContainer" class="dynamic-list">
+                            <div class="dynamic-item">
+                                <input type="text" class="nomeResponsavel" placeholder="Nome Completo">
+                            </div>
+                        </div>
+                        <button type="button" class="btn-add" onclick="adicionarCampo('responsaveisContainer', 'nomeResponsavel', 'Nome Completo')"><i class="fa-solid fa-plus"></i> Adicionar Responsável</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Endereço</label>
+                        <input type="text" id="endereco" placeholder="Rua, Quadra, Lote, Casa">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Localidade / Cidade</label>
+                        <input type="text" id="cidade" value="Paranoá" readonly style="background-color: #f1f5f9; font-weight: 600;">
+                    </div>
+                    
+                    <div class="form-group" style="position: relative;">
+                        <label>Assunto (Digite para buscar)</label>
+                        <input type="text" id="assuntoInput" placeholder="Comece a digitar o assunto..." autocomplete="off">
+                        <div id="assuntoAutocompleteList" class="autocomplete-items"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Conselheiro(a)</label>
+                        <select id="conselheiro">
+                            <option value="">Selecione o conselheiro...</option>
+                            <option value="Cláudia">Cláudia</option>
+                            <option value="Lucinea">Lucinea</option>
+                            <option value="Nadelço">Nadelço</option>
+                            <option value="Samara">Samara</option>
+                            <option value="Sandra">Sandra</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Processo SEI Nº</label>
+                        <input type="text" id="processoSeiNum" placeholder="Ex: 00080-00271677/2026-80">
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button type="button" class="btn-main btn-cadastrar" onclick="salvarRegistro()"><i class="fa-solid fa-floppy-disk"></i> Cadastrar / Salvar</button>
+                    <button type="button" class="btn-main btn-excluir" onclick="tentarLimparFormulario()"><i class="fa-solid fa-rotate-right"></i> Limpar Formulário</button>
+                </div>
+            </form>
+            <div id="statusBox" class="status-box"></div>
+        </div>
+
+        <div class="container">
+            <div class="table-header-flex">
+                <h3><i class="fa-solid fa-table-list"></i> Registros Cadastrados</h3>
+                <span id="contadorRegistros" style="font-size: 13px; color: #64748b; font-weight: 600;">Total: 0 registros</span>
+            </div>
+            <div class="table-container">
+                <table id="tabelaRegistros">
+                    <thead>
+                        <tr>
+                            <th>Pasta</th>
+                            <th>Nº Proces</th>
+                            <th>Criança/Adolescente</th>
+                            <th>Data Nasc</th>
+                            <th>Responsável</th>
+                            <th>Endereço</th>
+                            <th>Localidade</th>
+                            <th>Assunto</th>
+                            <th>Conselheiro(a)</th>
+                            <th>Processo SEI</th>
+                            <th style="text-align: center;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="11" style="text-align: center; color: #64748b; padding: 20px;">Nenhum dado cadastrado ainda.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= ABA 2: ATOS DE ATENDIMENTO ================= -->
+    <div id="atendimentoTab" class="tab-content">
+        <!-- Dashboard Informativo -->
+        <div class="dashboard-grid" style="margin-bottom: 24px;">
+            <div class="dash-box" style="background: linear-gradient(135deg, #1e3a8a, #0ea5e9); color: white;">
+                <h4 style="color: white; border-bottom: 1px solid rgba(255,255,255,0.2);">Total de Atendimentos Recepção</h4>
+                <p class="number" id="dashTotalAtendimentos" style="font-size: 28px; font-weight: bold; margin: 0;">0</p>
+            </div>
+            <div class="dash-box" style="background: linear-gradient(135deg, #059669, #10b981); color: white;">
+                <h4 style="color: white; border-bottom: 1px solid rgba(255,255,255,0.2);">Pessoas Diferentes Atendidas</h4>
+                <p class="number" id="dashPessoasUnicas" style="font-size: 28px; font-weight: bold; margin: 0;">0</p>
+            </div>
+        </div>
+
+        <!-- Formulário de Atos de Atendimento -->
+        <div class="container">
+            <div class="table-header-flex">
+                <h3><i class="fa-solid fa-pen-to-square"></i> Registrar Novo Ato de Atendimento (Administrativo / Recepção)</h3>
+                <span style="font-size: 12px; color: #64748b;"><i class="fa-solid fa-clock"></i> Data atual: <span id="spanDataHoje"></span></span>
+            </div>
+            
+            <form id="atendimentoForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nome</label>
+                        <input type="text" id="atendNome" placeholder="Nome completo da pessoa atendida" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Localidade / Região</label>
+                        <input type="text" id="atendCidade" value="Paranoá" readonly style="background-color: #f1f5f9; font-weight: 600;">
+                    </div>
+
+                    <div class="form-group" style="position: relative;">
+                        <label>Assunto (Digite para buscar)</label>
+                        <input type="text" id="atendAssuntoInput" placeholder="Comece a digitar o assunto..." autocomplete="off">
+                        <div id="atendAssuntoAutocompleteList" class="autocomplete-items"></div>
+                    </div>
+
+                    <div class="form-group" style="grid-column: span 3;">
+                        <label>Data e Hora do Atendimento</label>
+                        <input type="text" id="atendDataHora" readonly style="background-color: #f1f5f9; font-weight: 600;">
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button type="button" class="btn-main btn-cadastrar" onclick="salvarAtendimento()"><i class="fa-solid fa-check"></i> Salvar Atendimento</button>
+                    <button type="button" class="btn-main btn-excluir" onclick="limparFormAtendimento()"><i class="fa-solid fa-rotate-right"></i> Limpar</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="container">
+            <div class="table-header-flex">
+                <h3><i class="fa-solid fa-list-check"></i> Todos os Atendimentos Registrados</h3>
+                <span id="contadorAtendimentos" style="font-size: 13px; color: #64748b; font-weight: 600;">Total: 0</span>
+            </div>
+            
+            <div class="table-container">
+                <table id="tabelaAtendimentos">
+                    <thead>
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Nome</th>
+                            <th>Localidade</th>
+                            <th>Assunto</th>
+                            <th style="text-align: center;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="5" style="text-align: center; color: #64748b; padding: 20px;">Nenhum atendimento registrado.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL DE HISTÓRICO DE SERVIÇOS/RETORNOS ================= -->
+    <div id="modalHistorico" class="modal-overlay">
+        <div class="modal-content">
+            <div class="table-header-flex">
+                <h3 id="modalTituloPasta"><i class="fa-solid fa-clock-rotate-left"></i> Histórico de Serviços da Pasta</h3>
+                <button type="button" class="btn-remove" onclick="fecharModalHistorico()" style="padding: 6px 12px; font-size: 14px;"><i class="fa-solid fa-xmark"></i> Fechar</button>
+            </div>
+            
+            <p id="modalSubInfo" style="font-size: 13px; color: #64748b; margin-top: -5px; margin-bottom: 15px;"></p>
+
+            <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+                <h4 style="margin: 0 0 10px 0; font-size: 14px; color: var(--primary-color);"><i class="fa-solid fa-plus-circle"></i> Adicionar Novo Serviço / Retorno</h4>
+                <input type="hidden" id="historicoIndexAtual" value="-1">
+                <div class="form-grid" style="grid-template-columns: 1fr 2fr;">
+                    <div class="form-group">
+                        <label>Data do Atendimento</label>
+                        <input type="text" id="novoServicoData" placeholder="DD/MM/AAAA">
+                    </div>
+                    <div class="form-group">
+                        <label>Conselheiro(a) Responsável</label>
+                        <input type="text" id="novoServicoConselheiro" placeholder="Nome do conselheiro">
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Serviço Oferecido / Nova Demanda / Observações</label>
+                        <textarea id="novoServicoDescricao" placeholder="Ex: Retorno da mãe solicitando encaminhamento..." style="height: 60px; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px;"></textarea>
+                    </div>
+                </div>
+                <div style="margin-top: 12px;">
+                    <button type="button" class="btn-main btn-cadastrar" style="padding: 8px 16px; font-size: 13px;" onclick="adicionarNovoServicoNaPasta()"><i class="fa-solid fa-check"></i> Salvar Serviço no Histórico</button>
+                </div>
+            </div>
+
+            <h4 style="margin: 0 0 10px 0; font-size: 14px; color: var(--text-color);">Serviços Prestados Anteriormente:</h4>
+            <div class="table-container" style="max-height: 250px;">
+                <table id="tabelaHistoricoServicos">
+                    <thead>
+                        <tr>
+                            <th style="width: 20%;">Data</th>
+                            <th style="width: 25%;">Conselheiro(a)</th>
+                            <th style="width: 45%;">Serviço / Demanda Oferecida</th>
+                            <th style="width: 10%; text-align: center;">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="4" style="text-align: center; color: #64748b; padding: 15px;">Nenhum serviço registrado no histórico desta pasta.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Lista completa de assuntos fornecida
+        const listaAssuntosCompleta = [
+            "Negligência: Abandono de Incapaz",
+            "Negligência: Abandono Intelectual",
+            "Neglicência: Abandono Material",
+            "Negligência: Atividade doméstica",
+            "Negligência: Atos atentórios ao Exercício da cidadania",
+            "Negligência: Certidão de Nascimento",
+            "Negligência: Certidão de óbito",
+            "Negligência: Cultura / Esporte / Lazer",
+            "Negligência: Educação",
+            "Negligência: Evasão Escolar",
+            "Negligência: Fuga do Lar",
+            "Negligência: Negação do Direito á liberdade e á expressão",
+            "Negligência: em Alimentação",
+            "Negligência: Negligência em Amparo e Responsabilização",
+            "Negligência: em Assistência à saúde",
+            "Negligência: Privação ou Dificuldade de Convívio / Conflito Familiar",
+            "Negligência: Necessidades Especiais",
+            "Negligência: Não cumprimento de decisão judicial Transitada em Julgada",
+            "Negligência: Restrição ao direito de Ir e Vir",
+            "Negligência: Violações à Dignidade e ao Respeito",
+            "Negligência: Veículo / trânsito",
+            "Negligência: Saúde",
+            "VIOLÊNCIA PSICOLÓGICA",
+            "Violência Psicológica: Alienação Parental",
+            "Violência Psicológica: Ameaça",
+            "Violência Psicológica: Calúnia",
+            "Violência Psicológica: Chantagem",
+            "Violência Psicológica: Difamação",
+            "Violência Psicológica: Humilhação",
+            "Violência Psicológica: Injúria",
+            "Violência Psicológica: Violência Doméstica no âmbito Familiar",
+            "VIOLÊNCIA FÍSICA",
+            "Violência Física: Homicídio",
+            "Violência Física: Indução ao Suicídio",
+            "Violência Física: Lesão Corporal",
+            "Violência Física: Maus Tratos",
+            "Violência Física: Tentativa de Homicídio",
+            "VIOLÊNCIA SEXUAL",
+            "Violência Sexual: Abuso Sexual",
+            "Violência Sexual: Estupro",
+            "Violência Sexual: Estupro de Vulnerável",
+            "Violência Sexual: Exploração Sexual",
+            "VIOLÊNCIA INSTITUCIONAL",
+            "Violência Institucional: Abuso de autoridade",
+            "Violência Institucional: Ausência de programas e ações específicas para aplicação de medidas de proteção",
+            "Violência Institucional: Assédio Moral",
+            "Violência Institucional: Assédio Sexual",
+            "Violência Institucional: Atos atentórios ao direito de Educação",
+            "Violência Institucional: Atos atentórios ao exercício de cidadania",
+            "Violência Institucional: Assistência Social-Regularização Cadastro",
+            "Violência Institucional: Assistência Social-Inclusão em Projetos Sociais",
+            "Violência Institucional: Encaminham.à Gerência de Meio Aberto- Proc. existente de Medida Sócioeducativa",
+            "Violência Institucional: Encaminham.ao P. Judic. Regularização de guarda/visita ou com Trânsito em Julgado",
+            "Violência Institucional: Falta de condições educacionais adequadas",
+            "Violência Institucional: Impedimento de Permanência no Sistema Escolar",
+            "Violência Institucional: Indisponibilidade de acesso a Cultura, Esporte e Lazer",
+            "Violência Institucional: Indisponibilidade de acesso ao Ensino Fundamental ( 6 a 14 anos)",
+            "Violência Institucional: Indisponibilidade de acesso ao Ensino Médio (15 a 17 anos)",
+            "Violência Institucional: Indisponib./ Não acesso á Capacitação /Formação/Técnico/Profissional do aprendiz",
+            "Violência Institucional: Indisponibilidade de vaga em Creche e Pré-Escola às crianças de 0 a 5 anos de idade",
+            "Violência Institucional: Inexistência/ Impedimento de uso / Indisponibilidade de Transporte",
+            "Violência Institucional: Inexistência/ Impedimento de uso de Equipamento para Cultura, Esporte e Lazer",
+            "Violência Institucional: Não atendimento em saúde",
+            "Violência Institucional: Omissão",
+            "Violência Institucional: Requisição de Certidão de Nascimento",
+            "Violência Institucional: Requisição de Certidão de Óbito",
+            "Violência Institucional: Medida de Proteção /Requisição de Serviço Público área de segurança",
+            "Violência Institucional: Medida de Proteção /Requisição de Serviço Público Previdência e trabalho",
+            "Violência Institucional: Medida de Proteção /Requisição de Serviço Público Psicológico",
+            "Violência Institucional: Medida de Proteção /Requisição de Serviço Público Psiquiátrico",
+            "Violência Institucional: Necessidades Especiais",
+            "Violência Institucional: Negação do Direito à liberdade e Expressão",
+            "Violência Institucional: Tortura, Tratamento Cruel e Degradante",
+            "Violência Institucional: Violência Policial",
+            "TRABALHO INFANTIL",
+            "Trabalho Infantil: Âmbito Doméstico",
+            "Trabalho Infantil: Âmbito Rural",
+            "Trabalho Infantil: Atividades Informais",
+            "Trabalho Infantil: Condições Impróprias de remuneração ou Imposição de trabalo ao Adolescente",
+            "Trabalho Infantil: Condições Irregulares de Trabalho",
+            "Trabalho Infantil: Exploração Sexual",
+            "Trabalho Infantil: Inexistência ou Insuficiência de Condições para Formação Técnica e profissional",
+            "Trabalho Infantil: Submissão de Crianças/adolescentes à atividade Ilícita ou Contravenções Sociais",
+            "DISCRIMINAÇÃO",
+            "Discriminação - Por Compleição Física",
+            "Discriminação - Por Crença Religiosa",
+            "Discriminação - Por Deficiência",
+            "Discriminação - Por Identidade de Gênero",
+            "Discriminação - Por Orientação Sexual",
+            "Discriminação - Racial",
+            "VIOLÊNCIA ONLINE",
+            "Violência Online - Aliciamento Sexual Infantil Online",
+            "Violência Online - Apologia e Incitação à Crimes",
+            "Violência Online - Calúnia/ Difamação / Injúria",
+            "Violência Online - Cyberbullying",
+            "Violência Online - Pornografia",
+            "Violência Online – Racismo",
+            "AUTOAGRESSÃO",
+            "Autoagressão - Automutilação",
+            "Autoagressão - Suicídio",
+            "Autoagressão - Tentativa de Suicídio",
+            "TRÁFICO DE PESSOAS",
+            "Tráfico de Pessoas - Para Fins de Adoção Ilegal",
+            "Tráfico de Pessoas - Para Fins de Exploração Sexual",
+            "Tráfico de Pessoas - Para Fins de Remoção de Órgãos",
+            "Tráfico de Pessoas - Para Fins de Trabalho Infantil"
         ];
 
-        // ================= VARIÁVEIS GLOBAIS DE DADOS =================
-        let registros = JSON.parse(localStorage.getItem('ct_registros')) || [];
-        let atendimentos = JSON.parse(localStorage.getItem('ct_atendimentos')) || [];
-
-        // Inicialização ao carregar a página
-        window.onload = function() {
-            atualizarTabela();
-            atualizarTabelaAtendimentos();
+        // Inicialização de Meses, Datas Padrão e Autocompletes
+        window.addEventListener('DOMContentLoaded', () => {
+            const dataAtual = new Date();
+            const mesAtualStr = String(dataAtual.getMonth() + 1).padStart(2, '0');
+            const anoAtualStr = String(dataAtual.getFullYear());
+            
+            const selectMes = document.getElementById('filtroMes');
+            if(selectMes) selectMes.value = mesAtualStr;
+            const selectAno = document.getElementById('filtroAno');
+            if(selectAno) selectAno.value = anoAtualStr;
+            
+            atualizarDataHoraAtual();
             atualizarDashboardEstatisticas();
-            atualizarContadoresDashAtendimentos();
-            
-            // Definir data e hora atual no formulário de atendimento
-            const agora = new Date();
-            const dataFormatada = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-            document.getElementById('spanDataHoje').innerText = new Date().toLocaleDateString('pt-BR');
-            document.getElementById('atendDataHora').value = dataFormatada;
 
-            // Configurar autocompletes
-            configurarAutocomplete('assuntoInput', 'assuntoAutocompleteList', listaAssuntosComuns);
-            configurarAutocomplete('atendAssuntoInput', 'atendAssuntoAutocompleteList', listaAssuntosComuns);
-        };
+            // Configurar Autocompletes
+            configurarAutocomplete('assuntoInput', 'assuntoAutocompleteList');
+            configurarAutocomplete('atendAssuntoInput', 'atendAssuntoAutocompleteList');
+        });
 
-        // ================= SISTEMA DE ABAS =================
-        function alternarAba(idAba, btnElement) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        function configurarAutocomplete(inputId, listId) {
+            const inputEl = document.getElementById(inputId);
+            const listEl = document.getElementById(listId);
+
+            inputEl.addEventListener('input', function() {
+                const val = this.value;
+                listEl.innerHTML = '';
+                if (!val) return;
+
+                const matchVal = val.toLowerCase();
+                let count = 0;
+
+                for (let i = 0; i < listaAssuntosCompleta.length; i++) {
+                    if (listaAssuntosCompleta[i].toLowerCase().includes(matchVal)) {
+                        let itemDiv = document.createElement('div');
+                        
+                        // Destacar o termo correspondente
+                        let textoOriginal = listaAssuntosCompleta[i];
+                        let idx = textoOriginal.toLowerCase().indexOf(matchVal);
+                        let textoFormatado = textoOriginal.substring(0, idx) + 
+                            "<strong>" + textoOriginal.substring(idx, idx + matchVal.length) + "</strong>" + 
+                            textoOriginal.substring(idx + matchVal.length);
+
+                        itemDiv.innerHTML = textoFormatado;
+                        itemDiv.addEventListener('click', function() {
+                            inputEl.value = textoOriginal;
+                            listEl.innerHTML = '';
+                        });
+                        listEl.appendChild(itemDiv);
+                        count++;
+                        if (count >= 15) break; // Limitar sugestões para performance
+                    }
+                }
+            });
+
+            // Fechar sugestões ao clicar fora
+            document.addEventListener('click', function(e) {
+                if (e.target !== inputEl) {
+                    listEl.innerHTML = '';
+                }
+            });
+        }
+
+        function alternarAba(abaId, btnElement) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             
-            document.getElementById(idAba).classList.add('active');
+            document.getElementById(abaId).classList.add('active');
             btnElement.classList.add('active');
         }
 
-        // ================= TOGGLE DASHBOARD =================
         function toggleDashboard() {
             const wrap = document.getElementById('dashboardContainerWrap');
             const icon = document.getElementById('iconToggleDash');
             const text = document.getElementById('textToggleDash');
-            
+
             if (wrap.style.display === 'none') {
                 wrap.style.display = 'block';
                 icon.className = 'fa-solid fa-eye-slash';
@@ -67,279 +1003,354 @@
             }
         }
 
-        // ================= CAMPOS DINÂMICOS (CRIANÇAS E RESPONSÁVEIS) =================
+        function atualizarDataHoraAtual() {
+            const agora = new Date();
+            const dataFormatada = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR');
+            const inputDH = document.getElementById('atendDataHora');
+            if(inputDH) inputDH.value = dataFormatada;
+            const spanH = document.getElementById('spanDataHoje');
+            if(spanH) spanH.innerText = dataFormatada;
+        }
+        setInterval(atualizarDataHoraAtual, 1000);
+
+        // ================= SCRIPTS DA ABA 1 (Processos) =================
+        let registrosCarregados = [];
+        let atendimentosRegistrados = [];
+
+        function adicionarCampo(containerId, classeInput, placeholderTexto) {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = 'dynamic-item';
+            div.innerHTML = `<input type="text" class="${classeInput}" placeholder="${placeholderTexto}"><button type="button" class="btn-remove" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>`;
+            container.appendChild(div);
+        }
+
         function adicionarCampoCrianca() {
             const container = document.getElementById('criancasContainer');
             const div = document.createElement('div');
             div.className = 'dynamic-item';
-            div.innerHTML = `
-                <input type="text" class="nomeCrianca" placeholder="Nome Completo" oninput="calcularPastaAutomatica()">
-                <button type="button" class="btn-remove" onclick="removerCampo(this); calcularPastaAutomatica();"><i class="fa-solid fa-trash"></i></button>
-            `;
+            div.innerHTML = `<input type="text" class="nomeCrianca" placeholder="Nome Completo" oninput="calcularPastaAutomatica()"><button type="button" class="btn-remove" onclick="this.parentElement.remove(); calcularPastaAutomatica();"><i class="fa-solid fa-xmark"></i></button>`;
             container.appendChild(div);
         }
 
-        function adicionarCampo(containerId, classeInput, placeholderText) {
-            const container = document.getElementById(containerId);
-            const div = document.createElement('div');
-            div.className = 'dynamic-item';
-            div.innerHTML = `
-                <input type="text" class="${classeInput}" placeholder="${placeholderText}">
-                <button type="button" class="btn-remove" onclick="removerCampo(this)"><i class="fa-solid fa-trash"></i></button>
-            `;
-            container.appendChild(div);
+        function obterValoresDinamicos(classeInput) {
+            let valores = [];
+            document.querySelectorAll('.' + classeInput).forEach(input => { if (input.value.trim() !== '') valores.push(input.value.trim()); });
+            return valores.join(', ');
         }
 
-        function removerCampo(btn) {
-            const item = btn.parentElement;
-            if (item.parentElement.children.length > 1) {
-                item.remove();
-            } else {
-                alert("É necessário manter ao menos um campo.");
-            }
-        }
-
-        // ================= GERAÇÃO AUTOMÁTICA DA PASTA =================
         function calcularPastaAutomatica() {
-            const inputs = document.querySelectorAll('.nomeCrianca');
-            let primeiroNomeValido = "";
-            for (let input of inputs) {
-                if (input.value.trim() !== "") {
-                    primeiroNomeValido = input.value.trim();
-                    break;
-                }
-            }
-            document.getElementById('pasta').value = primeiroNomeValido;
-        }
+            const editIndex = document.getElementById('editIndex').value;
+            if (editIndex !== "-1") return;
 
-        // ================= AUTOCOMPLETE GENÉRICO =================
-        function configurarAutocomplete(inputId, listId, arrDados) {
-            const input = document.getElementById(inputId);
-            const listContainer = document.getElementById(listId);
-
-            input.addEventListener('input', function() {
-                const val = this.value;
-                listContainer.innerHTML = '';
-                if (!val) return;
-
-                const match = arrDados.filter(item => item.toLowerCase().includes(val.toLowerCase()));
-                match.forEach(item => {
-                    const div = document.createElement('div');
-                    div.innerHTML = item;
-                    div.addEventListener('click', function() {
-                        input.value = item;
-                        listContainer.innerHTML = '';
-                    });
-                    listContainer.appendChild(div);
-                });
-            });
-
-            document.addEventListener('click', function(e) {
-                if (e.target !== input) {
-                    listContainer.innerHTML = '';
-                }
-            });
-        }
-
-        // ================= CRUD DE PROCESSOS =================
-        function salvarRegistro() {
-            calcularPastaAutomatica();
-            const pasta = document.getElementById('pasta').value.trim();
-            const numProces = document.getElementById('numProces').value.trim();
-            const dataNasc = document.getElementById('dataNasc').value.trim();
-            const endereco = document.getElementById('endereco').value.trim();
-            const cidade = document.getElementById('cidade').value.trim();
-            const assunto = document.getElementById('assuntoInput').value.trim();
-            const conselheiro = document.getElementById('conselheiro').value;
-            const processoSeiNum = document.getElementById('processoSeiNum').value.trim();
-            const editIndex = parseInt(document.getElementById('editIndex').value);
-
-            if (!pasta) {
-                alert("Por favor, preencha pelo menos o nome de uma criança para gerar a pasta.");
+            const primeiroInput = document.querySelector('.nomeCrianca');
+            const inputPasta = document.getElementById('pasta');
+            if (!primeiroInput || !primeiroInput.value.trim()) {
+                inputPasta.value = '';
                 return;
             }
 
-            // Coletar crianças
-            const criancas = [];
-            document.querySelectorAll('.nomeCrianca').forEach(i => {
-                if(i.value.trim()) criancas.push(i.value.trim());
+            let nome = primeiroInput.value.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            let letra = nome[0].toUpperCase();
+            if (!/[A-Z]/.test(letra)) letra = 'A';
+
+            let maxNum = 0;
+            registrosCarregados.forEach(item => {
+                if (item.pasta && item.pasta.startsWith(letra + '-')) {
+                    let partes = item.pasta.split('-');
+                    let num = parseInt(partes[1]);
+                    if (!isNaN(num) && num > maxNum) maxNum = num;
+                }
             });
 
-            // Coletar responsáveis
-            const responsaveis = [];
-            document.querySelectorAll('.nomeResponsavel').forEach(i => {
-                if(i.value.trim()) responsaveis.push(i.value.trim());
-            });
+            inputPasta.value = `${letra}-${maxNum + 1}`;
+        }
 
-            const objRegistro = {
-                pasta,
-                numProces,
-                criancas,
-                dataNasc,
-                responsaveis,
-                endereco,
-                cidade,
-                assunto,
-                conselheiro,
-                processoSeiNum,
-                historicoServicos: editIndex >= 0 && registros[editIndex] ? registros[editIndex].historicoServicos || [] : []
+        function processarPlanilha(event) {
+            const arquivo = event.target.files[0];
+            const leitor = new FileReader();
+            leitor.onload = function(e) {
+                const dadosBinarios = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(dadosBinarios, { type: 'array' });
+                mapearRegistros(XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]));
             };
+            leitor.readAsArrayBuffer(arquivo);
+        }
 
-            if (editIndex >= 0) {
-                registros[editIndex] = objRegistro;
-                document.getElementById('editIndex').value = -1;
-                mostrarStatus("Registro atualizado com sucesso!");
-            } else {
-                registros.push(objRegistro);
-                mostrarStatus("Registro cadastrado com sucesso!");
+        function clicarColar() { executarColagem(document.getElementById('pasteInput').value); }
+        function processarDadosColados(event) { setTimeout(() => { executarColagem(event.target.value); }, 100); }
+
+        function executarColagem(textoColado) {
+            if (!textoColado.trim()) return;
+            const linhas = textoColado.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            let dadosConvertidos = [];
+            let inicioIndex = (linhas[0].includes('PASTA') || linhas[0].includes('PROCES')) ? 1 : 0;
+            for (let i = inicioIndex; i < linhas.length; i++) {
+                const col = linhas[i].split('\t');
+                dadosConvertidos.push({ numProces: col[1]||'', nomeCrianca: col[2]||'', dataNasc: col[3]||'', nomeResponsavel: col[4]||'', endereco: col[5]||'', cidade: col[6]||'Paranoá', assunto: col[7]||'', conselheiro: col[8]||'', processoSeiNum: col[9]||'', dataRegistro: new Date().toLocaleDateString('pt-BR') });
             }
+            mapearRegistros(dadosConvertidos);
+            mostrarMensagem("Dados importados com sucesso!");
+        }
 
-            localStorage.setItem('ct_registros', JSON.stringify(registros));
-            limparFormulario();
-            atualizarTabela();
+        function mapearRegistros(linhasBrutas) {
+            linhasBrutas.forEach((row) => {
+                let nomeCrianca = row['NOME DA CRIANÇA / ADOLESCENTE'] || row.nomeCrianca || '';
+                let letra = 'A';
+                if (nomeCrianca.trim().length > 0) {
+                    letra = nomeCrianca.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "")[0].toUpperCase();
+                    if (!/[A-Z]/.test(letra)) letra = 'A';
+                }
+
+                let maxNum = 0;
+                registrosCarregados.forEach(item => {
+                    if (item.pasta && item.pasta.startsWith(letra + '-')) {
+                        let partes = item.pasta.split('-');
+                        let num = parseInt(partes[1]);
+                        if (!isNaN(num) && num > maxNum) maxNum = num;
+                    }
+                });
+
+                let pastaGerada = `${letra}-${maxNum + 1}`;
+
+                let novoItem = {
+                    pasta: pastaGerada,
+                    numProces: row['Nº PROCES'] || row['numProces'] || '',
+                    nomeCrianca: nomeCrianca,
+                    dataNasc: row['DATA NASC'] || row.dataNasc || '',
+                    nomeResponsavel: row['NOME DO RESPONSÁVEL'] || row.nomeResponsavel || '',
+                    endereco: row['ENDEREÇO'] || row.endereco || '',
+                    cidade: row['CIDADE'] || row.cidade || 'Paranoá',
+                    assunto: row['ASSUNTO'] || row.assunto || '',
+                    conselheiro: row['CONSELHEIRO(A)'] || row.conselheiro || '',
+                    processoSeiNum: row['PROCESSO SEI Nº'] || row.processoSeiNum || '',
+                    dataRegistro: row.dataRegistro || new Date().toLocaleDateString('pt-BR'),
+                    historicoServicos: []
+                };
+                registrosCarregados.push(novoItem);
+            });
+            atualizarTabelaTela(registrosCarregados);
             atualizarDashboardEstatisticas();
         }
 
-        function mostrarStatus(msg) {
-            const box = document.getElementById('statusBox');
-            box.innerText = msg;
-            box.style.display = 'block';
-            setTimeout(() => { box.style.display = 'none'; }, 3500);
-        }
-
-        function limparFormulario() {
-            document.getElementById('processoForm').reset();
-            document.getElementById('editIndex').value = -1;
-            document.getElementById('pasta').value = '';
-            // Resetar listas dinâmicas para 1 item padrão
-            document.getElementById('criancasContainer').innerHTML = '<div class="dynamic-item"><input type="text" class="nomeCrianca" placeholder="Nome Completo" oninput="calcularPastaAutomatica()"></div>';
-            document.getElementById('responsaveisContainer').innerHTML = '<div class="dynamic-item"><input type="text" class="nomeResponsavel" placeholder="Nome Completo"></div>';
-        }
-
-        function tentarLimparFormulario() {
-            if(confirm("Deseja realmente limpar todos os campos preenchidos?")) {
-                limparFormulario();
-            }
-        }
-
-        function atualizarTabela(dadosExibir = registros) {
+        function atualizarTabelaTela(listaExibicao) {
             const tbody = document.querySelector('#tabelaRegistros tbody');
             tbody.innerHTML = '';
-            
-            document.getElementById('contadorRegistros').innerText = `Total: ${dadosExibir.length} registros`;
-
-            if (dadosExibir.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #64748b; padding: 20px;">Nenhum dado cadastrado.</td></tr>';
+            document.getElementById('contadorRegistros').innerText = `Total: ${listaExibicao.length} registros`;
+            if (listaExibicao.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; color: #64748b; padding: 20px;">Nenhum dado encontrado.</td></tr>';
                 return;
             }
+            listaExibicao.forEach((item) => {
+                let indexReal = registrosCarregados.indexOf(item);
+                let qtdServicos = item.historicoServicos ? item.historicoServicos.length : 0;
+                let badgeServicos = qtdServicos > 0 ? ` <span style="background: #8b5cf6; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px;" title="${qtdServicos} serviços extras">${qtdServicos}</span>` : '';
 
-            dadosExibir.forEach((reg, index) => {
-                const tr = document.createElement('tr');
-                const criancasStr = Array.isArray(reg.criancas) ? reg.criancas.join(', ') : reg.pasta;
-                const respStr = Array.isArray(reg.responsaveis) ? reg.responsaveis.join(', ') : (reg.responsavel || '');
-
-                tr.innerHTML = `
-                    <td><strong>${reg.pasta || '---'}</strong></td>
-                    <td>${reg.numProces || '---'}</td>
-                    <td>${criancasStr}</td>
-                    <td>${reg.dataNasc || '---'}</td>
-                    <td>${respStr}</td>
-                    <td>${reg.endereco || '---'}</td>
-                    <td>${reg.cidade || 'Paranoá'}</td>
-                    <td>${reg.assunto || '---'}</td>
-                    <td>${reg.conselheiro || '---'}</td>
-                    <td>${reg.processoSeiNum || '---'}</td>
+                tbody.innerHTML += `<tr>
+                    <td><strong>${item.pasta}</strong></td><td>${item.numProces}</td><td>${item.nomeCrianca}</td><td>${item.dataNasc}</td><td>${item.nomeResponsavel}</td><td>${item.endereco}</td><td>${item.cidade}</td><td>${item.assunto}</td><td>${item.conselheiro}</td><td>${item.processoSeiNum}</td>
                     <td style="text-align: center; white-space: nowrap;">
-                        <button type="button" class="btn-acao btn-historico" title="Histórico / Serviços" onclick="abrirModalHistorico(${index})"><i class="fa-solid fa-clock-rotate-left"></i></button>
-                        <button type="button" class="btn-acao btn-editar" title="Editar" onclick="editarRegistro(${index})"><i class="fa-solid fa-pen"></i></button>
-                        <button type="button" class="btn-acao btn-deletar" title="Excluir" onclick="deletarRegistro(${index})"><i class="fa-solid fa-trash"></i></button>
+                        <button type="button" class="btn-acao btn-historico" onclick="abrirHistoricoServicos(${indexReal})" title="Histórico de Serviços Prestados">${badgeServicos} <i class="fa-solid fa-clock-rotate-left"></i></button>
+                        <button type="button" class="btn-acao btn-editar" onclick="editarRegistro(${indexReal})" title="Editar"><i class="fa-solid fa-pen"></i></button>
+                        <button type="button" class="btn-acao btn-imprimir" onclick="imprimirCapa(${indexReal})" title="Imprimir Capa"><i class="fa-solid fa-print"></i></button>
+                        <button type="button" class="btn-acao btn-deletar" onclick="removerRegistro(${indexReal})" title="Excluir"><i class="fa-solid fa-trash"></i></button>
                     </td>
-                `;
-                tbody.appendChild(tr);
+                </tr>`;
             });
         }
 
-        function pesquisarProcessos() {
-            const termo = document.getElementById('inputPesquisaProcessos').value.toLowerCase();
-            if (!termo) {
-                atualizarTabela(registros);
-                return;
+        function salvarRegistro() {
+            let criancaVal = obterValoresDinamicos('nomeCrianca');
+            if(!criancaVal) { alert("Preencha o nome da criança/adolescente!"); return; }
+
+            let editIndex = parseInt(document.getElementById('editIndex').value);
+            let respVal = [];
+            document.querySelectorAll('.nomeResponsavel').forEach(i => { if(i.value.trim()) respVal.push(i.value.trim()); });
+
+            let dadosForm = {
+                pasta: document.getElementById('pasta').value,
+                numProces: document.getElementById('numProces').value,
+                nomeCrianca: criancaVal,
+                dataNasc: document.getElementById('dataNasc').value,
+                nomeResponsavel: respVal.join(', '),
+                endereco: document.getElementById('endereco').value,
+                cidade: document.getElementById('cidade').value,
+                assunto: document.getElementById('assuntoInput').value,
+                conselheiro: document.getElementById('conselheiro').value,
+                processoSeiNum: document.getElementById('processoSeiNum').value,
+                dataRegistro: editIndex !== -1 && registrosCarregados[editIndex].dataRegistro ? registrosCarregados[editIndex].dataRegistro : new Date().toLocaleDateString('pt-BR'),
+                historicoServicos: editIndex !== -1 && registrosCarregados[editIndex].historicoServicos ? registrosCarregados[editIndex].historicoServicos : []
+            };
+
+            if (editIndex === -1) {
+                registrosCarregados.push(dadosForm);
+                mostrarMensagem("Processo cadastrado com sucesso!");
+            } else {
+                dadosForm.pasta = registrosCarregados[editIndex].pasta;
+                registrosCarregados[editIndex] = dadosForm;
+                mostrarMensagem("Processo atualizado com sucesso!");
             }
-            const filtrados = registros.filter(r => {
-                const criancas = Array.isArray(r.criancas) ? r.criancas.join(' ').toLowerCase() : '';
-                const resp = Array.isArray(r.responsaveis) ? r.responsaveis.join(' ').toLowerCase() : '';
-                return (r.pasta && r.pasta.toLowerCase().includes(termo)) ||
-                       (r.numProces && r.numProces.toLowerCase().includes(termo)) ||
-                       (r.assunto && r.assunto.toLowerCase().includes(termo)) ||
-                       criancas.includes(termo) || resp.includes(termo);
-            });
-            atualizarTabela(filtrados);
+
+            atualizarTabelaTela(registrosCarregados);
+            atualizarDashboardEstatisticas();
+            tentarLimparFormulario();
         }
 
         function editarRegistro(index) {
-            const reg = registros[index];
+            const item = registrosCarregados[index];
             document.getElementById('editIndex').value = index;
-            document.getElementById('pasta').value = reg.pasta || '';
-            document.getElementById('numProces').value = reg.numProces || '';
-            document.getElementById('dataNasc').value = reg.dataNasc || '';
-            document.getElementById('endereco').value = reg.endereco || '';
-            document.getElementById('cidade').value = reg.cidade || 'Paranoá';
-            document.getElementById('assuntoInput').value = reg.assunto || '';
-            document.getElementById('conselheiro').value = reg.conselheiro || '';
-            document.getElementById('processoSeiNum').value = reg.processoSeiNum || '';
+            document.getElementById('pasta').value = item.pasta;
+            document.getElementById('numProces').value = item.numProces;
+            document.getElementById('dataNasc').value = item.dataNasc;
+            document.getElementById('endereco').value = item.endereco;
+            document.getElementById('cidade').value = item.cidade || 'Paranoá';
+            document.getElementById('assuntoInput').value = item.assunto;
+            document.getElementById('conselheiro').value = item.conselheiro;
+            document.getElementById('processoSeiNum').value = item.processoSeiNum;
 
-            // Preencher crianças dinâmicas
-            const cContainer = document.getElementById('criancasContainer');
-            cContainer.innerHTML = '';
-            const arrC = reg.criancas && reg.criancas.length > 0 ? reg.criancas : [reg.pasta];
-            arrC.forEach(c => {
-                const div = document.createElement('div');
-                div.className = 'dynamic-item';
-                div.innerHTML = `
-                    <input type="text" class="nomeCrianca" value="${c}" placeholder="Nome Completo" oninput="calcularPastaAutomatica()">
-                    <button type="button" class="btn-remove" onclick="removerCampo(this); calcularPastaAutomatica();"><i class="fa-solid fa-trash"></i></button>
-                `;
-                cContainer.appendChild(div);
+            const criancasContainer = document.getElementById('criancasContainer');
+            criancasContainer.innerHTML = '';
+            item.nomeCrianca.split(',').forEach(c => {
+                criancasContainer.innerHTML += `<div class="dynamic-item"><input type="text" class="nomeCrianca" value="${c.trim()}" placeholder="Nome Completo" oninput="calcularPastaAutomatica()"></div>`;
             });
 
-            // Preencher responsáveis dinâmicos
-            const rContainer = document.getElementById('responsaveisContainer');
-            rContainer.innerHTML = '';
-            const arrR = reg.responsaveis && reg.responsaveis.length > 0 ? reg.responsaveis : (reg.responsavel ? [reg.responsavel] : [""]);
-            arrR.forEach(r => {
-                const div = document.createElement('div');
-                div.className = 'dynamic-item';
-                div.innerHTML = `
-                    <input type="text" class="nomeResponsavel" value="${r}" placeholder="Nome Completo">
-                    <button type="button" class="btn-remove" onclick="removerCampo(this)"><i class="fa-solid fa-trash"></i></button>
-                `;
-                rContainer.appendChild(div);
+            const respContainer = document.getElementById('responsaveisContainer');
+            respContainer.innerHTML = '';
+            item.nomeResponsavel.split(',').forEach(r => {
+                if(r.trim()) respContainer.innerHTML += `<div class="dynamic-item"><input type="text" class="nomeResponsavel" value="${r.trim()}" placeholder="Nome Completo"></div>`;
             });
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function deletarRegistro(index) {
-            if(confirm("Deseja realmente excluir este registro permanentemente?")) {
-                registros.splice(index, 1);
-                localStorage.setItem('ct_registros', JSON.stringify(registros));
-                atualizarTabela();
+        function removerRegistro(index) {
+            if(confirm("Excluir este registro?")) { 
+                registrosCarregados.splice(index, 1); 
+                atualizarTabelaTela(registrosCarregados); 
                 atualizarDashboardEstatisticas();
             }
         }
 
-        // ================= MODAL DE HISTÓRICO =================
-        function abrirModalHistorico(index) {
+        function tentarLimparFormulario() { 
+            document.getElementById('processoForm').reset(); 
+            document.getElementById('editIndex').value = '-1';
+            document.getElementById('pasta').value = '';
+            document.getElementById('cidade').value = 'Paranoá';
+            document.getElementById('criancasContainer').innerHTML = '<div class="dynamic-item"><input type="text" class="nomeCrianca" placeholder="Nome Completo" oninput="calcularPastaAutomatica()"></div>';
+            document.getElementById('responsaveisContainer').innerHTML = '<div class="dynamic-item"><input type="text" class="nomeResponsavel" placeholder="Nome Completo"></div>';
+        }
+
+        function pesquisarProcessos() {
+            const termo = document.getElementById('inputPesquisaProcessos').value.trim().toLowerCase();
+            if (!termo) {
+                atualizarTabelaTela(registrosCarregados);
+                return;
+            }
+            const filtrados = registrosCarregados.filter(item => 
+                (item.nomeCrianca && item.nomeCrianca.toLowerCase().includes(termo)) ||
+                (item.nomeResponsavel && item.nomeResponsavel.toLowerCase().includes(termo)) ||
+                (item.numProces && item.numProces.toLowerCase().includes(termo)) ||
+                (item.assunto && item.assunto.toLowerCase().includes(termo)) ||
+                (item.pasta && item.pasta.toLowerCase().includes(termo))
+            );
+            atualizarTabelaTela(filtrados);
+        }
+
+        // ================= FUNÇÕES DO DASHBOARD ESTATÍSTICO =================
+        function filtrarPorMesEAno(listaItens) {
+            const mesSel = document.getElementById('filtroMes').value;
+            const anoSel = document.getElementById('filtroAno').value;
+
+            return listaItens.filter(item => {
+                if (!item.dataRegistro) return false;
+                let partes;
+                if (item.dataRegistro.includes('/')) {
+                    partes = item.dataRegistro.split('/');
+                    if (partes.length < 3) return false;
+                    let m = partes[1];
+                    let a = partes[2];
+                    if (mesSel !== 'todos' && m !== mesSel) return false;
+                    if (a !== anoSel) return false;
+                    return true;
+                }
+                return true;
+            });
+        }
+
+        function atualizarDashboardEstatisticas() {
+            let baseProcessosFiltrada = filtrarPorMesEAno(registrosCarregados);
+            let baseAtendimentosFiltrada = filtrarPorMesEAno(atendimentosRegistrados);
+
+            let consolidadosAssuntos = {};
+            let consolidadosCidades = {};
+
+            baseProcessosFiltrada.forEach(item => {
+                let assunto = item.assunto ? item.assunto.toUpperCase().trim() : 'NÃO INFORMADO';
+                let cidade = item.cidade ? item.cidade.trim() : 'Paranoá';
+
+                consolidadosAssuntos[assunto] = (consolidadosAssuntos[assunto] || 0) + 1;
+                if(cidade) {
+                    consolidadosCidades[cidade] = (consolidadosCidades[cidade] || 0) + 1;
+                }
+            });
+
+            baseAtendimentosFiltrada.forEach(item => {
+                let assunto = item.assunto ? item.assunto.toUpperCase().trim() : 'ATENDIMENTO RECEPÇÃO';
+                let cidade = item.endereco ? item.endereco.trim() : (item.cidade ? item.cidade.trim() : 'Paranoá');
+
+                consolidadosAssuntos[assunto] = (consolidadosAssuntos[assunto] || 0) + 1;
+                if(cidade) {
+                    consolidadosCidades[cidade] = (consolidadosCidades[cidade] || 0) + 1;
+                }
+            });
+
+            const listaAssuntosEl = document.getElementById('listaAssuntosDash');
+            listaAssuntosEl.innerHTML = '';
+            let totalGeralAssuntos = 0;
+
+            let assuntosOrdenados = Object.entries(consolidadosAssuntos).sort((a,b) => b[1] - a[1]);
+            
+            if (assuntosOrdenados.length === 0) {
+                listaAssuntosEl.innerHTML = '<li style="color: #64748b; text-align: center; display: block; padding: 15px;">Nenhum assunto registrado neste mês.</li>';
+                document.getElementById('totalAssuntosCount').innerText = '0';
+            } else {
+                assuntosOrdenados.forEach(([assunto, qtd]) => {
+                    totalGeralAssuntos += qtd;
+                    listaAssuntosEl.innerHTML += `<li><span>${assunto}</span> <span class="dash-badge">${qtd}</span></li>`;
+                });
+                document.getElementById('totalAssuntosCount').innerText = totalGeralAssuntos;
+            }
+
+            const listaCidadesEl = document.getElementById('listaCidadesDash');
+            listaCidadesEl.innerHTML = '';
+            let cidadesOrdenadas = Object.entries(consolidadosCidades).sort((a,b) => b[1] - a[1]);
+
+            if (cidadesOrdenadas.length === 0) {
+                listaCidadesEl.innerHTML = '<li style="color: #64748b; text-align: center; display: block; padding: 15px;">Nenhuma região registrada neste mês.</li>';
+                document.getElementById('regiaoDestaque').innerText = 'Destaque: ---';
+            } else {
+                let regiaoMaisAtendida = cidadesOrdenadas[0][0];
+                let qtdMaisAtendida = cidadesOrdenadas[0][1];
+                document.getElementById('regiaoDestaque').innerText = `Mais Atendida: ${regiaoMaisAtendida} (${qtdMaisAtendida})`;
+
+                cidadesOrdenadas.forEach(([cidade, qtd]) => {
+                    listaCidadesEl.innerHTML += `<li><span>${cidade}</span> <span class="dash-badge" style="background: #d1fae5; color: #065f46;">${qtd}</span></li>`;
+                });
+            }
+        }
+
+        // ================= FUNÇÕES DO HISTÓRICO DE SERVIÇOS (MODAL) =================
+        function abrirHistoricoServicos(index) {
             document.getElementById('historicoIndexAtual').value = index;
-            const reg = registros[index];
-            document.getElementById('modalTituloPasta').innerHTML = `<i class="fa-solid fa-clock-rotate-left"></i> Histórico: Pasta ${reg.pasta}`;
-            document.getElementById('modalSubInfo').innerText = `Processo Nº: ${reg.numProces || '---'} | Assunto Principal: ${reg.assunto || '---'}`;
+            const item = registrosCarregados[index];
+            
+            document.getElementById('modalTituloPasta').innerHTML = `<i class="fa-solid fa-clock-rotate-left"></i> Histórico de Serviços - Pasta: ${item.pasta}`;
+            document.getElementById('modalSubInfo').innerText = `Criança/Adolescente: ${item.nomeCrianca} | Responsável: ${item.nomeResponsavel || '---'}`;
             
             document.getElementById('novoServicoData').value = new Date().toLocaleDateString('pt-BR');
-            document.getElementById('novoServicoConselheiro').value = reg.conselheiro || '';
+            document.getElementById('novoServicoConselheiro').value = item.conselheiro || '';
             document.getElementById('novoServicoDescricao').value = '';
 
-            atualizarTabelaHistoricoServicos(reg);
+            atualizarTabelaHistoricoModal(item.historicoServicos);
             document.getElementById('modalHistorico').style.display = 'flex';
         }
 
@@ -349,258 +1360,198 @@
 
         function adicionarNovoServicoNaPasta() {
             const index = parseInt(document.getElementById('historicoIndexAtual').value);
-            const data = document.getElementById('novoServicoData').value.trim();
-            const conselheiro = document.getElementById('novoServicoConselheiro').value.trim();
-            const descricao = document.getElementById('novoServicoDescricao').value.trim();
+            const dataServico = document.getElementById('novoServicoData').value.trim();
+            const conselheiroServico = document.getElementById('novoServicoConselheiro').value.trim();
+            const descricaoServico = document.getElementById('novoServicoDescricao').value.trim();
 
-            if (!data || !descricao) {
-                alert("Preencha a data e a descrição do serviço prestado.");
+            if (!descricaoServico) {
+                alert("Por favor, preencha a descrição do serviço oferecido/demanda!");
                 return;
             }
 
-            if (!registros[index].historicoServicos) {
-                registros[index].historicoServicos = [];
+            if (!registrosCarregados[index].historicoServicos) {
+                registrosCarregados[index].historicoServicos = [];
             }
 
-            registros[index].historicoServicos.push({ data, conselheiro, descricao });
-            localStorage.setItem('ct_registros', JSON.stringify(registros));
+            registrosCarregados[index].historicoServicos.push({
+                data: dataServico || new Date().toLocaleDateString('pt-BR'),
+                conselheiro: conselheiroServico || 'Não informado',
+                descricao: descricaoServico
+            });
 
             document.getElementById('novoServicoDescricao').value = '';
-            atualizarTabelaHistoricoServicos(registros[index]);
+            atualizarTabelaHistoricoModal(registrosCarregados[index].historicoServicos);
+            atualizarTabelaTela(registrosCarregados);
+            mostrarMensagem("Serviço adicionado ao histórico com sucesso!");
         }
 
-        function atualizarTabelaHistoricoServicos(reg) {
+        function removerServicoHistorico(servicoIndex) {
+            const index = parseInt(document.getElementById('historicoIndexAtual').value);
+            if (confirm("Deseja remover este serviço do histórico?")) {
+                registrosCarregados[index].historicoServicos.splice(servicoIndex, 1);
+                atualizarTabelaHistoricoModal(registrosCarregados[index].historicoServicos);
+                atualizarTabelaTela(registrosCarregados);
+            }
+        }
+
+        function atualizarTabelaHistoricoModal(listaServicos) {
             const tbody = document.querySelector('#tabelaHistoricoServicos tbody');
             tbody.innerHTML = '';
-            const servicos = reg.historicoServicos || [];
-
-            if (servicos.length === 0) {
+            
+            if (!listaServicos || listaServicos.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #64748b; padding: 15px;">Nenhum serviço registrado no histórico desta pasta.</td></tr>';
                 return;
             }
 
-            servicos.forEach((serv, sIdx) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
+            listaServicos.forEach((serv, sIndex) => {
+                tbody.innerHTML += `<tr>
                     <td>${serv.data}</td>
-                    <td>${serv.conselheiro || '---'}</td>
+                    <td><strong>${serv.conselheiro}</strong></td>
                     <td>${serv.descricao}</td>
-                    <td style="text-align: center;">
-                        <button type="button" class="btn-remove" style="padding: 4px 8px;" onclick="deletarServicoHistorico(${sIdx})"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
+                    <td style="text-align: center;"><button type="button" class="btn-acao btn-deletar" onclick="removerServicoHistorico(${sIndex})" title="Excluir item"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>`;
             });
         }
 
-        function deletarServicoHistorico(sIdx) {
-            const regIndex = parseInt(document.getElementById('historicoIndexAtual').value);
-            registros[regIndex].historicoServicos.splice(sIdx, 1);
-            localStorage.setItem('ct_registros', JSON.stringify(registros));
-            atualizarTabelaHistoricoServicos(registros[regIndex]);
-        }
-
-        // ================= ABA 2: ATOS DE ATENDIMENTO (RECEPÇÃO) =================
-        function salvarAtendimento() {
-            const nome = document.getElementById('atendNome').value.trim();
-            const cidade = document.getElementById('atendCidade').value.trim();
-            const assunto = document.getElementById('atendAssuntoInput').value.trim();
-            const dataHora = document.getElementById('atendDataHora').value.trim();
-
-            if (!nome) {
-                alert("Por favor, preencha o nome da pessoa atendida.");
-                return;
+        function imprimirCapa(index) {
+            const item = registrosCarregados[index];
+            const janelaImpressao = window.open('', '_blank', 'width=800,height=900');
+            
+            let enderecoCompleto = item.endereco || '';
+            if (item.cidade) {
+                enderecoCompleto += (enderecoCompleto ? ' – ' : '') + item.cidade;
             }
 
-            const novoAtendimento = { nome, cidade, assunto, dataHora };
-            atendimentos.push(novoAtendimento);
-            localStorage.setItem('ct_atendimentos', JSON.stringify(atendimentos));
-
-            document.getElementById('atendNome').value = '';
-            document.getElementById('atendAssuntoInput').value = '';
-            
-            atualizarTabelaAtendimentos();
-            atualizarContadoresDashAtendimentos();
-            alert("Atendimento registrado com sucesso!");
+            janelaImpressao.document.write(`
+                <!DOCTYPE html>
+                <html lang="pt-BR">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Capa do Processo - ${item.pasta}</title>
+                    <style>
+                        @page { size: A4; margin: 1.5cm; }
+                        * { box-sizing: border-box; }
+                        body { font-family: Calibri, sans-serif; margin: 0; padding: 0; color: #000; background-color: #fff; }
+                        .capa-folha { width: 100%; height: 25.7cm; margin: 0 auto; border: 2px solid #000; padding: 35px; position: relative; }
+                        .cabecalho-principal { text-align: center; font-size: 18pt; font-weight: bold; line-height: 1.4; text-transform: uppercase; }
+                        .linha-topo { display: flex; justify-content: space-between; align-items: baseline; font-size: 26pt; font-weight: bold; margin-top: 3.2em; margin-bottom: 35px; padding-left: 10px; padding-right: 10px; }
+                        .bloco-dados { display: flex; flex-direction: column; gap: 20px; font-size: 20pt; font-weight: bold; line-height: 1.3; padding-left: 10px; }
+                        .bloco-centro-baixo { position: absolute; bottom: 95px; left: 35px; right: 35px; display: flex; flex-direction: column; gap: 20px; }
+                        .bloco-assunto { font-size: 20pt; font-weight: bold; text-transform: uppercase; text-align: center; width: 100%; }
+                        .bloco-inferior { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; }
+                        .bloco-direita { text-align: right; font-size: 14pt; font-weight: bold; line-height: 1.4; }
+                        @media print {
+                            html, body { width: 210mm; height: 297mm; margin: 0; padding: 0; }
+                            .capa-folha { border: 2px solid #000; width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+                            .nao-imprimir { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="capa-folha">
+                        <div>
+                            <div class="cabecalho-principal">
+                                CONSELHO TUTELAR DO PARANOÁ<br>ARQUIVO ATIVO
+                            </div>
+                            <div class="linha-topo">
+                                <span>${item.pasta || '---'}</span>
+                                <span>PROCESSO: ${item.numProces || '---'}</span>
+                            </div>
+                            <br><br><br>
+                            <div class="bloco-dados">
+                                <div>ADOLESCENTE: ${item.nomeCrianca ? item.nomeCrianca.toUpperCase() : '---'}</div>
+                                <div>RESPONSAVEL: ${item.nomeResponsavel ? item.nomeResponsavel.toUpperCase() : '---'}</div>
+                                <div>ENDEREÇO: ${enderecoCompleto ? enderecoCompleto.toUpperCase() : '---'}</div>
+                            </div>
+                        </div>
+                        <div class="bloco-centro-baixo">
+                            <div class="bloco-assunto">ASSUNTO: ${item.assunto ? item.assunto.toUpperCase() : '---'}</div>
+                            <div class="bloco-inferior">
+                                <div></div>
+                                <div class="bloco-direita">
+                                    CONSELHEIRO(A): ${item.conselheiro ? item.conselheiro.toUpperCase() : '---'}<br>
+                                    SEI: ${item.processoSeiNum || '---'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="nao-imprimir" style="text-align: center; margin-top: 30px; margin-bottom: 30px;">
+                        <button onclick="window.print()" style="padding: 12px 24px; font-size: 16px; background: #1e3a8a; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;"><i class="fa-solid fa-print"></i> Imprimir Capa Agora</button>
+                    </div>
+                </body>
+                </html>
+            `);
+            janelaImpressao.document.close();
         }
 
-        function atualizarTabelaAtendimentos() {
+        // ================= SCRIPTS DA ABA 2 (Atos de Atendimento) =================
+        function salvarAtendimento() {
+            const nome = document.getElementById('atendNome').value.trim();
+            const assunto = document.getElementById('atendAssuntoInput').value.trim();
+            const cidade = document.getElementById('atendCidade').value.trim();
+            if(!nome || !assunto) { alert("Preencha o Nome e o Assunto!"); return; }
+
+            const novoAtendimento = {
+                dataHora: document.getElementById('atendDataHora').value,
+                dataRegistro: new Date().toLocaleDateString('pt-BR'),
+                nome: nome,
+                endereco: cidade,
+                cidade: cidade,
+                assunto: assunto
+            };
+
+            atendimentosRegistrados.push(novoAtendimento);
+            atualizarDashboardEAtendimentos();
+            atualizarDashboardEstatisticas();
+            limparFormAtendimento();
+            mostrarMensagem("Ato de atendimento registrado com sucesso!");
+        }
+
+        function limparFormAtendimento() {
+            document.getElementById('atendimentoForm').reset();
+            document.getElementById('atendCidade').value = 'Paranoá';
+            atualizarDataHoraAtual();
+        }
+
+        function atualizarDashboardEAtendimentos() {
             const tbody = document.querySelector('#tabelaAtendimentos tbody');
             tbody.innerHTML = '';
-            document.getElementById('contadorAtendimentos').innerText = `Total: ${atendimentos.length}`;
+            
+            document.getElementById('contadorAtendimentos').innerText = `Total: ${atendimentosRegistrados.length}`;
+            document.getElementById('dashTotalAtendimentos').innerText = atendimentosRegistrados.length;
 
-            if (atendimentos.length === 0) {
+            const pessoasUnicas = new Set(atendimentosRegistrados.map(a => a.nome.toLowerCase()));
+            document.getElementById('dashPessoasUnicas').innerText = pessoasUnicas.size;
+
+            if (atendimentosRegistrados.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 20px;">Nenhum atendimento registrado.</td></tr>';
                 return;
             }
 
-            atendimentos.slice().reverse().forEach((atend, indexReal) => {
-                const indexOriginal = atendimentos.length - 1 - indexReal;
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${atend.dataHora}</td>
-                    <td><strong>${atend.nome}</strong></td>
-                    <td>${atend.cidade}</td>
-                    <td>${atend.assunto || '---'}</td>
-                    <td style="text-align: center;">
-                        <button type="button" class="btn-acao btn-deletar" onclick="deletarAtendimento(${indexOriginal})"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
+            atendimentosRegistrados.forEach((item, index) => {
+                tbody.innerHTML += `<tr>
+                    <td>${item.dataHora}</td>
+                    <td><strong>${item.nome}</strong></td>
+                    <td>${item.cidade || 'Paranoá'}</td>
+                    <td><span style="background: #e0f2fe; color: #0369a1; padding: 3px 8px; border-radius: 4px; font-weight: 600;">${item.assunto}</span></td>
+                    <td style="text-align: center;"><button type="button" class="btn-acao btn-deletar" onclick="removerAtendimento(${index})"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>`;
             });
         }
 
-        function deletarAtendimento(index) {
+        function removerAtendimento(index) {
             if(confirm("Deseja excluir este registro de atendimento?")) {
-                atendimentos.splice(index, 1);
-                localStorage.setItem('ct_atendimentos', JSON.stringify(atendimentos));
-                atualizarTabelaAtendimentos();
-                atualizarContadoresDashAtendimentos();
-            }
-        }
-
-        function limparFormAtendimento() {
-            document.getElementById('atendNome').value = '';
-            document.getElementById('atendAssuntoInput').value = '';
-        }
-
-        function atualizarContadoresDashAtendimentos() {
-            document.getElementById('dashTotalAtendimentos').innerText = atendimentos.length;
-            const unicas = new Set(atendimentos.map(a => a.nome.toLowerCase().trim())).size;
-            document.getElementById('dashPessoasUnicas').innerText = unicas;
-        }
-
-        // ================= DASHBOARD ESTATÍSTICO DE PROCESSOS =================
-        function atualizarDashboardEstatisticas() {
-            const mesFiltro = document.getElementById('filtroMes').value;
-            const anoFiltro = document.getElementById('filtroAno').value;
-
-            // Filtrar registros se necessário (se houver campo de data cadastrada no futuro, por enquanto usa todos ou baseia nos serviços)
-            const dadosFiltrados = registros; 
-
-            // Estatísticas por Assunto
-            const contAssuntos = {};
-            // Estatísticas por Cidade/Localidade
-            const contCidades = {};
-
-            dadosFiltrados.forEach(r => {
-                const assunto = r.assunto ? r.assunto.trim() : "Não Informado";
-                contAssuntos[assunto] = (contAssuntos[assunto] || 0) + 1;
-
-                const cidade = r.cidade ? r.cidade.trim() : "Paranoá";
-                contCidades[cidade] = (contCidades[cidade] || 0) + 1;
-            });
-
-            // Renderizar Lista de Assuntos
-            const listaAssuntosEl = document.getElementById('listaAssuntosDash');
-            listaAssuntosEl.innerHTML = '';
-            let totalAssuntos = 0;
-
-            const assuntosOrdenados = Object.entries(contAssuntos).sort((a,b) => b[1] - a[1]);
-            if (assuntosOrdenados.length === 0) {
-                listaAssuntosEl.innerHTML = '<li style="color: #64748b; text-align: center; display: block; padding: 15px;">Nenhum dado no período.</li>';
-            } else {
-                assuntosOrdenados.forEach(([assunto, qtd]) => {
-                    totalAssuntos += qtd;
-                    const li = document.createElement('li');
-                    li.innerHTML = `<span>${assunto}</span> <span class="dash-badge">${qtd}</span>`;
-                    listaAssuntosEl.appendChild(li);
-                });
-            }
-            document.getElementById('totalAssuntosCount').innerText = totalAssuntos;
-
-            // Renderizar Lista de Cidades / Localidades
-            const listaCidadesEl = document.getElementById('listaCidadesDash');
-            listaCidadesEl.innerHTML = '';
-            const cidadesOrdenadas = Object.entries(contCidades).sort((a,b) => b[1] - a[1]);
-            
-            if (cidadesOrdenadas.length === 0) {
-                listaCidadesEl.innerHTML = '<li style="color: #64748b; text-align: center; display: block; padding: 15px;">Nenhum dado no período.</li>';
-                document.getElementById('regiaoDestaque').innerText = 'Destaque: ---';
-            } else {
-                document.getElementById('regiaoDestaque').innerText = `Destaque: ${cidadesOrdenadas[0][0]} (${cidadesOrdenadas[0][1]})`;
-                cidadesOrdenadas.forEach(([cidade, qtd]) => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `<span>${cidade}</span> <span class="dash-badge">${qtd}</span>`;
-                    listaCidadesEl.appendChild(li);
-                });
-            }
-        }
-
-        // ================= IMPORTAÇÃO EXCEL / TEXTO COLADO =================
-        function processarPlanilha(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                try {
-                    const data = new Uint8Array(evt.target.result);
-                    const workbook = XLSX.read(data, {type: 'array'});
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    const json = XLSX.utils.sheet_to_json(worksheet, {header: 1});
-                    converterEImportarLinhas(json);
-                } catch (err) {
-                    alert("Erro ao ler o arquivo Excel: " + err.message);
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        }
-
-        function processarDadosColados(e) {
-            setTimeout(() => {
-                const texto = document.getElementById('pasteInput').value;
-                if (!texto) return;
-                const linhas = texto.split('\n').map(l => l.split('\t'));
-                converterEImportarLinhas(linhas);
-                document.getElementById('pasteInput').value = '';
-            }, 100);
-        }
-
-        function clicarColar() {
-            const texto = document.getElementById('pasteInput').value;
-            if (!texto) {
-                alert("Cole os dados do Excel na caixa de texto primeiro.");
-                return;
-            }
-            const linhas = texto.split('\n').map(l => l.split('\t'));
-            converterEImportarLinhas(linhas);
-            document.getElementById('pasteInput').value = '';
-        }
-
-        function converterEImportarLinhas(linhas) {
-            let importadosCount = 0;
-            linhas.forEach((cols, idx) => {
-                if (idx === 0 && (cols[0]?.toLowerCase().includes('pasta') || cols[0]?.toLowerCase().includes('nome'))) {
-                    return; // Pular cabeçalho provável
-                }
-                if (cols.length >= 2 && cols[0]?.trim() !== "") {
-                    const novoReg = {
-                        pasta: cols[0]?.trim() || '',
-                        numProces: cols[1]?.trim() || '',
-                        criancas: [cols[2]?.trim() || cols[0]?.trim()],
-                        dataNasc: cols[3]?.trim() || '',
-                        responsaveis: [cols[4]?.trim() || ''],
-                        endereco: cols[5]?.trim() || '',
-                        cidade: cols[6]?.trim() || 'Paranoá',
-                        assunto: cols[7]?.trim() || '',
-                        conselheiro: cols[8]?.trim() || '',
-                        processoSeiNum: cols[9]?.trim() || '',
-                        historicoServicos: []
-                    };
-                    registros.push(novoReg);
-                    importadosCount++;
-                }
-            });
-
-            if (importadosCount > 0) {
-                localStorage.setItem('ct_registros', JSON.stringify(registros));
-                atualizarTabela();
+                atendimentosRegistrados.splice(index, 1);
+                atualizarDashboardEAtendimentos();
                 atualizarDashboardEstatisticas();
-                alert(`${importadosCount} registros importados com sucesso!`);
-            } else {
-                alert("Nenhum registro válido encontrado nos dados informados.");
             }
+        }
+
+        function mostrarMensagem(texto) {
+            const box = document.getElementById('statusBox');
+            box.style.display = 'block';
+            box.innerText = texto;
+            setTimeout(() => { box.style.display = 'none'; }, 4000);
         }
     </script>
 </body>
