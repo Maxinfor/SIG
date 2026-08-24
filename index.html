@@ -1,653 +1,606 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestão - Conselho Tutelar do Paranoá</title>
-    <!-- Biblioteca SheetJS para leitura de arquivos Excel (.xlsx) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- FontAwesome para Ícones -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary-color: #1e3a8a;
-            --primary-hover: #1e40af;
-            --secondary-color: #0ea5e9;
-            --success-color: #10b981;
-            --danger-color: #ef4444;
-            --warning-color: #f59e0b;
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --text-color: #1e293b;
-            --border-color: #cbd5e1;
+<script>
+        // ================= LISTA DE ASSUNTOS COMUNS (CONSELHO TUTELAR) =================
+        const listaAssuntosComuns = [
+            "Acompanhamento Escolar / Frequência",
+            "Acolhimento Institucional (Abrigo)",
+            "Ameaça / Violação de Direitos",
+            "Atendimento Psicológico / Saúde Mental",
+            "Negligência / Abandono de Incapaz",
+            "Suspeita de Maus-Tratos / Violência Física",
+            "Violência Psicológica / Moral",
+            "Violência Sexual / Abuso",
+            "Trabalho Infantil",
+            "Disputa de Guarda / Conflito Familiar",
+            "Evasão Escolar",
+            "Falta de Vaga em Creche / Escola",
+            "Acesso a Medicamentos / Tratamento Médico",
+            "Ato Infracional",
+            "Orientação Familiar",
+            "Outros / Demanda Administrativa"
+        ];
+
+        // ================= VARIÁVEIS GLOBAIS DE DADOS =================
+        let registros = JSON.parse(localStorage.getItem('ct_registros')) || [];
+        let atendimentos = JSON.parse(localStorage.getItem('ct_atendimentos')) || [];
+
+        // Inicialização ao carregar a página
+        window.onload = function() {
+            atualizarTabela();
+            atualizarTabelaAtendimentos();
+            atualizarDashboardEstatisticas();
+            atualizarContadoresDashAtendimentos();
+            
+            // Definir data e hora atual no formulário de atendimento
+            const agora = new Date();
+            const dataFormatada = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            document.getElementById('spanDataHoje').innerText = new Date().toLocaleDateString('pt-BR');
+            document.getElementById('atendDataHora').value = dataFormatada;
+
+            // Configurar autocompletes
+            configurarAutocomplete('assuntoInput', 'assuntoAutocompleteList', listaAssuntosComuns);
+            configurarAutocomplete('atendAssuntoInput', 'atendAssuntoAutocompleteList', listaAssuntosComuns);
+        };
+
+        // ================= SISTEMA DE ABAS =================
+        function alternarAba(idAba, btnElement) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(idAba).classList.add('active');
+            btnElement.classList.add('active');
         }
 
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            margin: 0; 
-            padding: 30px; 
-            background-color: var(--bg-color); 
-            color: var(--text-color); 
-        }
-
-        .header-title {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 24px;
-            color: var(--primary-color);
-        }
-
-        .header-title-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .header-title h2 {
-            margin: 0;
-            font-size: 24px;
-            font-weight: 700;
-        }
-
-        /* Sistema de Abas (Menu Superior) */
-        .nav-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 24px;
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 12px;
-        }
-
-        .tab-btn {
-            background-color: #e2e8f0;
-            color: #475569;
-            border: none;
-            padding: 10px 20px;
-            font-size: 14px;
-            font-weight: 600;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .tab-btn.active {
-            background-color: var(--primary-color);
-            color: #fff;
-        }
-
-        .tab-btn:hover:not(.active) {
-            background-color: #cbd5e1;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .container { 
-            background: var(--card-bg); 
-            padding: 24px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); 
-            margin-bottom: 24px; 
-        }
-
-        .upload-section { 
-            margin-bottom: 20px; 
-            padding: 18px; 
-            background: #f1f5f9; 
-            border-radius: 8px; 
-            border: 1px dashed var(--border-color);
-        }
-
-        .upload-section label {
-            font-weight: 600;
-            font-size: 14px;
-            display: block;
-            margin-bottom: 8px;
-            color: #475569;
-        }
-
-        .form-grid { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 18px; 
-        }
-
-        @media (max-width: 1024px) {
-            .form-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-
-        @media (max-width: 640px) {
-            .form-grid { grid-template-columns: 1fr; }
-        }
-
-        .form-group { 
-            display: flex; 
-            flex-direction: column; 
-            position: relative;
-        }
-
-        .form-group label { 
-            font-weight: 600; 
-            margin-bottom: 6px; 
-            font-size: 12px; 
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #475569;
-        }
-
-        .form-group input, .form-group select, .form-group textarea { 
-            padding: 10px 12px; 
-            border: 1px solid var(--border-color); 
-            border-radius: 6px; 
-            background-color: #fff; 
-            font-size: 14px;
-            transition: all 0.2s ease;
-        }
-
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            outline: none;
-            border-color: var(--secondary-color);
-            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
-        }
-
-        .dynamic-list { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 8px; 
-            margin-bottom: 6px; 
-        }
-
-        .dynamic-item { 
-            display: flex; 
-            gap: 8px; 
-        }
-
-        .dynamic-item input { 
-            flex: 1; 
-        }
-
-        .btn-add { 
-            background-color: var(--secondary-color); 
-            color: #fff; 
-            border: none; 
-            padding: 6px 10px; 
-            font-size: 12px; 
-            border-radius: 4px; 
-            cursor: pointer; 
-            align-self: flex-start; 
-            font-weight: 600;
-        }
-
-        .btn-remove { 
-            background-color: var(--danger-color); 
-            color: #fff; 
-            border: none; 
-            padding: 0 10px; 
-            font-size: 12px; 
-            border-radius: 4px; 
-            cursor: pointer; 
-        }
-
-        .actions { 
-            margin-top: 24px; 
-            display: flex; 
-            gap: 12px; 
-        }
-
-        button.btn-main { 
-            padding: 10px 20px; 
-            font-size: 14px; 
-            border: none; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            color: #fff; 
-            font-weight: 600; 
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: background-color 0.2s;
-        }
-
-        .btn-cadastrar { background-color: var(--success-color); }
-        .btn-cadastrar:hover { background-color: #059669; }
-
-        .btn-excluir { background-color: #64748b; }
-        .btn-excluir:hover { background-color: #475569; }
-
-        .status-box { 
-            margin-top: 15px; 
-            padding: 12px; 
-            background: #d1fae5; 
-            color: #065f46; 
-            border-radius: 6px; 
-            font-weight: 500;
-            display: none; 
-            border-left: 4px solid var(--success-color);
-        }
-        
-        .table-header-flex {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .table-header-flex h3 {
-            margin: 0;
-            color: var(--primary-color);
-            font-size: 18px;
-        }
-
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin-top: 5px; 
-            font-size: 13px; 
-            background: #fff; 
-        }
-
-        th, td { 
-            border: 1px solid #e2e8f0; 
-            padding: 10px 12px; 
-            text-align: left; 
-        }
-
-        th { 
-            background-color: var(--primary-color); 
-            color: white; 
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 11px;
-            letter-spacing: 0.5px;
-        }
-
-        tr:nth-child(even) { background-color: #f8fafc; }
-        tr:hover { background-color: #f1f5f9; }
-
-        .table-container { 
-            max-height: 450px; 
-            overflow-y: auto; 
-            border-radius: 6px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .btn-acao { 
-            padding: 6px 10px; 
-            font-size: 12px; 
-            margin-right: 4px; 
-            border-radius: 4px;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-        }
-        .btn-deletar { background-color: var(--danger-color); color: #fff; }
-
-        .search-box-container {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            background: #f1f5f9;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-        }
-
-        .search-box-container input {
-            flex: 1;
-            padding: 10px 14px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 14px;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="header-title">
-        <div class="header-title-left">
-            <i class="fa-solid fa-folder-open fa-2x"></i>
-            <h2>Sistema de Gestão - Conselho Tutelar <span style="font-size: 14px; display: block; color: #64748b; font-weight: 400;">Unidade Paranoá</span></h2>
-        </div>
-    </div>
-
-    <!-- MENU DE ABAS -->
-    <div class="nav-tabs">
-        <button type="button" class="tab-btn active" onclick="alternarAba('processosTab', this)">
-            <i class="fa-solid fa-folder-tree"></i> Gestão de Processos
-        </button>
-    </div>
-
-    <!-- ================= ABA 1: GESTÃO DE PROCESSOS ================= -->
-    <div id="processosTab" class="tab-content active">
-        
-        <div class="container">
-            <div class="table-header-flex">
-                <h3><i class="fa-solid fa-magnifying-glass"></i> Pesquisar Processos / Cadastros</h3>
-            </div>
-            <div class="search-box-container">
-                <input type="text" id="inputPesquisaProcessos" placeholder="Digite o nome da criança, responsável, número ou assunto..." oninput="pesquisarProcessos()">
-            </div>
-        </div>
-
-        <div class="container">
-            <div class="upload-section">
-                <label><i class="fa-solid fa-file-excel"></i> Carregar Planilha Excel (.xlsx):</label>
-                <input type="file" id="excelFile" accept=".xlsx, .xls" onchange="processarPlanilha(event)">
-                <p style="font-size: 12px; color: #64748b; margin-top: 6px; margin-bottom: 0;">A planilha preencherá automaticamente a pasta com a 1ª letra do nome + posição da linha (Ex: A-1).</p>
-            </div>
-
-            <form id="processoForm">
-                <input type="hidden" id="editIndex" value="-1">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Pasta (Gerada Automaticamente)</label>
-                        <input type="text" id="pasta" placeholder="Preencha o nome da criança abaixo" readonly style="background-color: #f1f5f9; font-weight: bold; color: var(--primary-color);">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Nº Processo / Nº Planilha</label>
-                        <input type="text" id="numProces" placeholder="Ex: 1 ou 780/26" oninput="calcularPastaAutomatica()">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Nome da Criança / Adolescente</label>
-                        <div id="criancasContainer" class="dynamic-list">
-                            <div class="dynamic-item">
-                                <input type="text" class="nomeCrianca" placeholder="Nome Completo" oninput="calcularPastaAutomatica()">
-                            </div>
-                        </div>
-                        <button type="button" class="btn-add" onclick="adicionarCampoCrianca()"><i class="fa-solid fa-plus"></i> Adicionar Criança</button>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Data Nasc.</label>
-                        <input type="text" id="dataNasc" placeholder="DD/MM/AAAA">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Nome do Responsável</label>
-                        <div id="responsaveisContainer" class="dynamic-list">
-                            <div class="dynamic-item">
-                                <input type="text" class="nomeResponsavel" placeholder="Nome Completo">
-                            </div>
-                        </div>
-                        <button type="button" class="btn-add" onclick="adicionarCampo('responsaveisContainer', 'nomeResponsavel', 'Nome Completo')"><i class="fa-solid fa-plus"></i> Adicionar Responsável</button>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Endereço</label>
-                        <input type="text" id="endereco" placeholder="Rua, Quadra, Lote, Casa">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Localidade / Cidade</label>
-                        <input type="text" id="cidade" value="Paranoá" readonly style="background-color: #f1f5f9; font-weight: 600;">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Assunto</label>
-                        <input type="text" id="assuntoInput" placeholder="Digite o assunto...">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Conselheiro(a)</label>
-                        <select id="conselheiro">
-                            <option value="">Selecione o conselheiro...</option>
-                            <option value="Cláudia">Cláudia</option>
-                            <option value="Lucinea">Lucinea</option>
-                            <option value="Nadelço">Nadelço</option>
-                            <option value="Samara">Samara</option>
-                            <option value="Sandra">Sandra</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Processo SEI Nº</label>
-                        <input type="text" id="processoSeiNum" placeholder="Ex: 00080-00271677/2026-80">
-                    </div>
-                </div>
-
-                <div class="actions">
-                    <button type="button" class="btn-main btn-cadastrar" onclick="salvarRegistro()"><i class="fa-solid fa-floppy-disk"></i> Cadastrar / Salvar</button>
-                    <button type="button" class="btn-main btn-excluir" onclick="tentarLimparFormulario()"><i class="fa-solid fa-rotate-right"></i> Limpar Formulário</button>
-                </div>
-            </form>
-            <div id="statusBox" class="status-box"></div>
-        </div>
-
-        <div class="container">
-            <div class="table-header-flex">
-                <h3><i class="fa-solid fa-table-list"></i> Registros Cadastrados</h3>
-                <span id="contadorRegistros" style="font-size: 13px; color: #64748b; font-weight: 600;">Total: 0 registros</span>
-            </div>
-            <div class="table-container">
-                <table id="tabelaRegistros">
-                    <thead>
-                        <tr>
-                            <th>Pasta</th>
-                            <th>Nº Proces</th>
-                            <th>Criança/Adolescente</th>
-                            <th>Data Nasc</th>
-                            <th>Responsável</th>
-                            <th>Endereço</th>
-                            <th>Localidade</th>
-                            <th>Assunto</th>
-                            <th>Conselheiro(a)</th>
-                            <th>Processo SEI</th>
-                            <th style="text-align: center;">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td colspan="11" style="text-align: center; color: #64748b; padding: 20px;">Nenhum dado cadastrado ainda.</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        let listaRegistros = [];
-
-        function calcularPastaAutomatica() {
-            const inputsCrianca = document.querySelectorAll('.nomeCrianca');
-            let primeiroNome = '';
-            if (inputsCrianca.length > 0 && inputsCrianca[0].value.trim() !== '') {
-                primeiroNome = inputsCrianca[0].value.trim();
-            }
-
-            const letra = primeiroNome ? primeiroNome.charAt(0).toUpperCase() : '';
-            const numProces = document.getElementById('numProces').value.trim();
-
-            if (letra && numProces) {
-                document.getElementById('pasta').value = letra + '-' + numProces;
-            } else if (letra) {
-                document.getElementById('pasta').value = letra;
+        // ================= TOGGLE DASHBOARD =================
+        function toggleDashboard() {
+            const wrap = document.getElementById('dashboardContainerWrap');
+            const icon = document.getElementById('iconToggleDash');
+            const text = document.getElementById('textToggleDash');
+            
+            if (wrap.style.display === 'none') {
+                wrap.style.display = 'block';
+                icon.className = 'fa-solid fa-eye-slash';
+                text.innerText = 'Esconder Dashboard Estatístico';
             } else {
-                document.getElementById('pasta').value = '';
+                wrap.style.display = 'none';
+                icon.className = 'fa-solid fa-eye';
+                text.innerText = 'Mostrar Dashboard Estatístico';
             }
         }
 
+        // ================= CAMPOS DINÂMICOS (CRIANÇAS E RESPONSÁVEIS) =================
         function adicionarCampoCrianca() {
             const container = document.getElementById('criancasContainer');
             const div = document.createElement('div');
             div.className = 'dynamic-item';
-            div.innerHTML = `<input type="text" class="nomeCrianca" placeholder="Nome Completo" oninput="calcularPastaAutomatica()"> <button type="button" class="btn-remove" onclick="this.parentElement.remove(); calcularPastaAutomatica();">X</button>`;
+            div.innerHTML = `
+                <input type="text" class="nomeCrianca" placeholder="Nome Completo" oninput="calcularPastaAutomatica()">
+                <button type="button" class="btn-remove" onclick="removerCampo(this); calcularPastaAutomatica();"><i class="fa-solid fa-trash"></i></button>
+            `;
             container.appendChild(div);
         }
 
-        function adicionarCampo(containerId, classeInput, placeholder) {
+        function adicionarCampo(containerId, classeInput, placeholderText) {
             const container = document.getElementById(containerId);
             const div = document.createElement('div');
             div.className = 'dynamic-item';
-            div.innerHTML = `<input type="text" class="${classeInput}" placeholder="${placeholder}"> <button type="button" class="btn-remove" onclick="this.parentElement.remove()">X</button>`;
+            div.innerHTML = `
+                <input type="text" class="${classeInput}" placeholder="${placeholderText}">
+                <button type="button" class="btn-remove" onclick="removerCampo(this)"><i class="fa-solid fa-trash"></i></button>
+            `;
             container.appendChild(div);
         }
 
-        function processarPlanilha(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+        function removerCampo(btn) {
+            const item = btn.parentElement;
+            if (item.parentElement.children.length > 1) {
+                item.remove();
+            } else {
+                alert("É necessário manter ao menos um campo.");
+            }
+        }
 
+        // ================= GERAÇÃO AUTOMÁTICA DA PASTA =================
+        function calcularPastaAutomatica() {
+            const inputs = document.querySelectorAll('.nomeCrianca');
+            let primeiroNomeValido = "";
+            for (let input of inputs) {
+                if (input.value.trim() !== "") {
+                    primeiroNomeValido = input.value.trim();
+                    break;
+                }
+            }
+            document.getElementById('pasta').value = primeiroNomeValido;
+        }
+
+        // ================= AUTOCOMPLETE GENÉRICO =================
+        function configurarAutocomplete(inputId, listId, arrDados) {
+            const input = document.getElementById(inputId);
+            const listContainer = document.getElementById(listId);
+
+            input.addEventListener('input', function() {
+                const val = this.value;
+                listContainer.innerHTML = '';
+                if (!val) return;
+
+                const match = arrDados.filter(item => item.toLowerCase().includes(val.toLowerCase()));
+                match.forEach(item => {
+                    const div = document.createElement('div');
+                    div.innerHTML = item;
+                    div.addEventListener('click', function() {
+                        input.value = item;
+                        listContainer.innerHTML = '';
+                    });
+                    listContainer.appendChild(div);
+                });
+            });
+
+            document.addEventListener('click', function(e) {
+                if (e.target !== input) {
+                    listContainer.innerHTML = '';
+                }
+            });
+        }
+
+        // ================= CRUD DE PROCESSOS =================
+        function salvarRegistro() {
+            calcularPastaAutomatica();
+            const pasta = document.getElementById('pasta').value.trim();
+            const numProces = document.getElementById('numProces').value.trim();
+            const dataNasc = document.getElementById('dataNasc').value.trim();
+            const endereco = document.getElementById('endereco').value.trim();
+            const cidade = document.getElementById('cidade').value.trim();
+            const assunto = document.getElementById('assuntoInput').value.trim();
+            const conselheiro = document.getElementById('conselheiro').value;
+            const processoSeiNum = document.getElementById('processoSeiNum').value.trim();
+            const editIndex = parseInt(document.getElementById('editIndex').value);
+
+            if (!pasta) {
+                alert("Por favor, preencha pelo menos o nome de uma criança para gerar a pasta.");
+                return;
+            }
+
+            // Coletar crianças
+            const criancas = [];
+            document.querySelectorAll('.nomeCrianca').forEach(i => {
+                if(i.value.trim()) criancas.push(i.value.trim());
+            });
+
+            // Coletar responsáveis
+            const responsaveis = [];
+            document.querySelectorAll('.nomeResponsavel').forEach(i => {
+                if(i.value.trim()) responsaveis.push(i.value.trim());
+            });
+
+            const objRegistro = {
+                pasta,
+                numProces,
+                criancas,
+                dataNasc,
+                responsaveis,
+                endereco,
+                cidade,
+                assunto,
+                conselheiro,
+                processoSeiNum,
+                historicoServicos: editIndex >= 0 && registros[editIndex] ? registros[editIndex].historicoServicos || [] : []
+            };
+
+            if (editIndex >= 0) {
+                registros[editIndex] = objRegistro;
+                document.getElementById('editIndex').value = -1;
+                mostrarStatus("Registro atualizado com sucesso!");
+            } else {
+                registros.push(objRegistro);
+                mostrarStatus("Registro cadastrado com sucesso!");
+            }
+
+            localStorage.setItem('ct_registros', JSON.stringify(registros));
+            limparFormulario();
+            atualizarTabela();
+            atualizarDashboardEstatisticas();
+        }
+
+        function mostrarStatus(msg) {
+            const box = document.getElementById('statusBox');
+            box.innerText = msg;
+            box.style.display = 'block';
+            setTimeout(() => { box.style.display = 'none'; }, 3500);
+        }
+
+        function limparFormulario() {
+            document.getElementById('processoForm').reset();
+            document.getElementById('editIndex').value = -1;
+            document.getElementById('pasta').value = '';
+            // Resetar listas dinâmicas para 1 item padrão
+            document.getElementById('criancasContainer').innerHTML = '<div class="dynamic-item"><input type="text" class="nomeCrianca" placeholder="Nome Completo" oninput="calcularPastaAutomatica()"></div>';
+            document.getElementById('responsaveisContainer').innerHTML = '<div class="dynamic-item"><input type="text" class="nomeResponsavel" placeholder="Nome Completo"></div>';
+        }
+
+        function tentarLimparFormulario() {
+            if(confirm("Deseja realmente limpar todos os campos preenchidos?")) {
+                limparFormulario();
+            }
+        }
+
+        function atualizarTabela(dadosExibir = registros) {
+            const tbody = document.querySelector('#tabelaRegistros tbody');
+            tbody.innerHTML = '';
+            
+            document.getElementById('contadorRegistros').innerText = `Total: ${dadosExibir.length} registros`;
+
+            if (dadosExibir.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #64748b; padding: 20px;">Nenhum dado cadastrado.</td></tr>';
+                return;
+            }
+
+            dadosExibir.forEach((reg, index) => {
+                const tr = document.createElement('tr');
+                const criancasStr = Array.isArray(reg.criancas) ? reg.criancas.join(', ') : reg.pasta;
+                const respStr = Array.isArray(reg.responsaveis) ? reg.responsaveis.join(', ') : (reg.responsavel || '');
+
+                tr.innerHTML = `
+                    <td><strong>${reg.pasta || '---'}</strong></td>
+                    <td>${reg.numProces || '---'}</td>
+                    <td>${criancasStr}</td>
+                    <td>${reg.dataNasc || '---'}</td>
+                    <td>${respStr}</td>
+                    <td>${reg.endereco || '---'}</td>
+                    <td>${reg.cidade || 'Paranoá'}</td>
+                    <td>${reg.assunto || '---'}</td>
+                    <td>${reg.conselheiro || '---'}</td>
+                    <td>${reg.processoSeiNum || '---'}</td>
+                    <td style="text-align: center; white-space: nowrap;">
+                        <button type="button" class="btn-acao btn-historico" title="Histórico / Serviços" onclick="abrirModalHistorico(${index})"><i class="fa-solid fa-clock-rotate-left"></i></button>
+                        <button type="button" class="btn-acao btn-editar" title="Editar" onclick="editarRegistro(${index})"><i class="fa-solid fa-pen"></i></button>
+                        <button type="button" class="btn-acao btn-deletar" title="Excluir" onclick="deletarRegistro(${index})"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function pesquisarProcessos() {
+            const termo = document.getElementById('inputPesquisaProcessos').value.toLowerCase();
+            if (!termo) {
+                atualizarTabela(registros);
+                return;
+            }
+            const filtrados = registros.filter(r => {
+                const criancas = Array.isArray(r.criancas) ? r.criancas.join(' ').toLowerCase() : '';
+                const resp = Array.isArray(r.responsaveis) ? r.responsaveis.join(' ').toLowerCase() : '';
+                return (r.pasta && r.pasta.toLowerCase().includes(termo)) ||
+                       (r.numProces && r.numProces.toLowerCase().includes(termo)) ||
+                       (r.assunto && r.assunto.toLowerCase().includes(termo)) ||
+                       criancas.includes(termo) || resp.includes(termo);
+            });
+            atualizarTabela(filtrados);
+        }
+
+        function editarRegistro(index) {
+            const reg = registros[index];
+            document.getElementById('editIndex').value = index;
+            document.getElementById('pasta').value = reg.pasta || '';
+            document.getElementById('numProces').value = reg.numProces || '';
+            document.getElementById('dataNasc').value = reg.dataNasc || '';
+            document.getElementById('endereco').value = reg.endereco || '';
+            document.getElementById('cidade').value = reg.cidade || 'Paranoá';
+            document.getElementById('assuntoInput').value = reg.assunto || '';
+            document.getElementById('conselheiro').value = reg.conselheiro || '';
+            document.getElementById('processoSeiNum').value = reg.processoSeiNum || '';
+
+            // Preencher crianças dinâmicas
+            const cContainer = document.getElementById('criancasContainer');
+            cContainer.innerHTML = '';
+            const arrC = reg.criancas && reg.criancas.length > 0 ? reg.criancas : [reg.pasta];
+            arrC.forEach(c => {
+                const div = document.createElement('div');
+                div.className = 'dynamic-item';
+                div.innerHTML = `
+                    <input type="text" class="nomeCrianca" value="${c}" placeholder="Nome Completo" oninput="calcularPastaAutomatica()">
+                    <button type="button" class="btn-remove" onclick="removerCampo(this); calcularPastaAutomatica();"><i class="fa-solid fa-trash"></i></button>
+                `;
+                cContainer.appendChild(div);
+            });
+
+            // Preencher responsáveis dinâmicos
+            const rContainer = document.getElementById('responsaveisContainer');
+            rContainer.innerHTML = '';
+            const arrR = reg.responsaveis && reg.responsaveis.length > 0 ? reg.responsaveis : (reg.responsavel ? [reg.responsavel] : [""]);
+            arrR.forEach(r => {
+                const div = document.createElement('div');
+                div.className = 'dynamic-item';
+                div.innerHTML = `
+                    <input type="text" class="nomeResponsavel" value="${r}" placeholder="Nome Completo">
+                    <button type="button" class="btn-remove" onclick="removerCampo(this)"><i class="fa-solid fa-trash"></i></button>
+                `;
+                rContainer.appendChild(div);
+            });
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function deletarRegistro(index) {
+            if(confirm("Deseja realmente excluir este registro permanentemente?")) {
+                registros.splice(index, 1);
+                localStorage.setItem('ct_registros', JSON.stringify(registros));
+                atualizarTabela();
+                atualizarDashboardEstatisticas();
+            }
+        }
+
+        // ================= MODAL DE HISTÓRICO =================
+        function abrirModalHistorico(index) {
+            document.getElementById('historicoIndexAtual').value = index;
+            const reg = registros[index];
+            document.getElementById('modalTituloPasta').innerHTML = `<i class="fa-solid fa-clock-rotate-left"></i> Histórico: Pasta ${reg.pasta}`;
+            document.getElementById('modalSubInfo').innerText = `Processo Nº: ${reg.numProces || '---'} | Assunto Principal: ${reg.assunto || '---'}`;
+            
+            document.getElementById('novoServicoData').value = new Date().toLocaleDateString('pt-BR');
+            document.getElementById('novoServicoConselheiro').value = reg.conselheiro || '';
+            document.getElementById('novoServicoDescricao').value = '';
+
+            atualizarTabelaHistoricoServicos(reg);
+            document.getElementById('modalHistorico').style.display = 'flex';
+        }
+
+        function fecharModalHistorico() {
+            document.getElementById('modalHistorico').style.display = 'none';
+        }
+
+        function adicionarNovoServicoNaPasta() {
+            const index = parseInt(document.getElementById('historicoIndexAtual').value);
+            const data = document.getElementById('novoServicoData').value.trim();
+            const conselheiro = document.getElementById('novoServicoConselheiro').value.trim();
+            const descricao = document.getElementById('novoServicoDescricao').value.trim();
+
+            if (!data || !descricao) {
+                alert("Preencha a data e a descrição do serviço prestado.");
+                return;
+            }
+
+            if (!registros[index].historicoServicos) {
+                registros[index].historicoServicos = [];
+            }
+
+            registros[index].historicoServicos.push({ data, conselheiro, descricao });
+            localStorage.setItem('ct_registros', JSON.stringify(registros));
+
+            document.getElementById('novoServicoDescricao').value = '';
+            atualizarTabelaHistoricoServicos(registros[index]);
+        }
+
+        function atualizarTabelaHistoricoServicos(reg) {
+            const tbody = document.querySelector('#tabelaHistoricoServicos tbody');
+            tbody.innerHTML = '';
+            const servicos = reg.historicoServicos || [];
+
+            if (servicos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #64748b; padding: 15px;">Nenhum serviço registrado no histórico desta pasta.</td></tr>';
+                return;
+            }
+
+            servicos.forEach((serv, sIdx) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${serv.data}</td>
+                    <td>${serv.conselheiro || '---'}</td>
+                    <td>${serv.descricao}</td>
+                    <td style="text-align: center;">
+                        <button type="button" class="btn-remove" style="padding: 4px 8px;" onclick="deletarServicoHistorico(${sIdx})"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function deletarServicoHistorico(sIdx) {
+            const regIndex = parseInt(document.getElementById('historicoIndexAtual').value);
+            registros[regIndex].historicoServicos.splice(sIdx, 1);
+            localStorage.setItem('ct_registros', JSON.stringify(registros));
+            atualizarTabelaHistoricoServicos(registros[regIndex]);
+        }
+
+        // ================= ABA 2: ATOS DE ATENDIMENTO (RECEPÇÃO) =================
+        function salvarAtendimento() {
+            const nome = document.getElementById('atendNome').value.trim();
+            const cidade = document.getElementById('atendCidade').value.trim();
+            const assunto = document.getElementById('atendAssuntoInput').value.trim();
+            const dataHora = document.getElementById('atendDataHora').value.trim();
+
+            if (!nome) {
+                alert("Por favor, preencha o nome da pessoa atendida.");
+                return;
+            }
+
+            const novoAtendimento = { nome, cidade, assunto, dataHora };
+            atendimentos.push(novoAtendimento);
+            localStorage.setItem('ct_atendimentos', JSON.stringify(atendimentos));
+
+            document.getElementById('atendNome').value = '';
+            document.getElementById('atendAssuntoInput').value = '';
+            
+            atualizarTabelaAtendimentos();
+            atualizarContadoresDashAtendimentos();
+            alert("Atendimento registrado com sucesso!");
+        }
+
+        function atualizarTabelaAtendimentos() {
+            const tbody = document.querySelector('#tabelaAtendimentos tbody');
+            tbody.innerHTML = '';
+            document.getElementById('contadorAtendimentos').innerText = `Total: ${atendimentos.length}`;
+
+            if (atendimentos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 20px;">Nenhum atendimento registrado.</td></tr>';
+                return;
+            }
+
+            atendimentos.slice().reverse().forEach((atend, indexReal) => {
+                const indexOriginal = atendimentos.length - 1 - indexReal;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${atend.dataHora}</td>
+                    <td><strong>${atend.nome}</strong></td>
+                    <td>${atend.cidade}</td>
+                    <td>${atend.assunto || '---'}</td>
+                    <td style="text-align: center;">
+                        <button type="button" class="btn-acao btn-deletar" onclick="deletarAtendimento(${indexOriginal})"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function deletarAtendimento(index) {
+            if(confirm("Deseja excluir este registro de atendimento?")) {
+                atendimentos.splice(index, 1);
+                localStorage.setItem('ct_atendimentos', JSON.stringify(atendimentos));
+                atualizarTabelaAtendimentos();
+                atualizarContadoresDashAtendimentos();
+            }
+        }
+
+        function limparFormAtendimento() {
+            document.getElementById('atendNome').value = '';
+            document.getElementById('atendAssuntoInput').value = '';
+        }
+
+        function atualizarContadoresDashAtendimentos() {
+            document.getElementById('dashTotalAtendimentos').innerText = atendimentos.length;
+            const unicas = new Set(atendimentos.map(a => a.nome.toLowerCase().trim())).size;
+            document.getElementById('dashPessoasUnicas').innerText = unicas;
+        }
+
+        // ================= DASHBOARD ESTATÍSTICO DE PROCESSOS =================
+        function atualizarDashboardEstatisticas() {
+            const mesFiltro = document.getElementById('filtroMes').value;
+            const anoFiltro = document.getElementById('filtroAno').value;
+
+            // Filtrar registros se necessário (se houver campo de data cadastrada no futuro, por enquanto usa todos ou baseia nos serviços)
+            const dadosFiltrados = registros; 
+
+            // Estatísticas por Assunto
+            const contAssuntos = {};
+            // Estatísticas por Cidade/Localidade
+            const contCidades = {};
+
+            dadosFiltrados.forEach(r => {
+                const assunto = r.assunto ? r.assunto.trim() : "Não Informado";
+                contAssuntos[assunto] = (contAssuntos[assunto] || 0) + 1;
+
+                const cidade = r.cidade ? r.cidade.trim() : "Paranoá";
+                contCidades[cidade] = (contCidades[cidade] || 0) + 1;
+            });
+
+            // Renderizar Lista de Assuntos
+            const listaAssuntosEl = document.getElementById('listaAssuntosDash');
+            listaAssuntosEl.innerHTML = '';
+            let totalAssuntos = 0;
+
+            const assuntosOrdenados = Object.entries(contAssuntos).sort((a,b) => b[1] - a[1]);
+            if (assuntosOrdenados.length === 0) {
+                listaAssuntosEl.innerHTML = '<li style="color: #64748b; text-align: center; display: block; padding: 15px;">Nenhum dado no período.</li>';
+            } else {
+                assuntosOrdenados.forEach(([assunto, qtd]) => {
+                    totalAssuntos += qtd;
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span>${assunto}</span> <span class="dash-badge">${qtd}</span>`;
+                    listaAssuntosEl.appendChild(li);
+                });
+            }
+            document.getElementById('totalAssuntosCount').innerText = totalAssuntos;
+
+            // Renderizar Lista de Cidades / Localidades
+            const listaCidadesEl = document.getElementById('listaCidadesDash');
+            listaCidadesEl.innerHTML = '';
+            const cidadesOrdenadas = Object.entries(contCidades).sort((a,b) => b[1] - a[1]);
+            
+            if (cidadesOrdenadas.length === 0) {
+                listaCidadesEl.innerHTML = '<li style="color: #64748b; text-align: center; display: block; padding: 15px;">Nenhum dado no período.</li>';
+                document.getElementById('regiaoDestaque').innerText = 'Destaque: ---';
+            } else {
+                document.getElementById('regiaoDestaque').innerText = `Destaque: ${cidadesOrdenadas[0][0]} (${cidadesOrdenadas[0][1]})`;
+                cidadesOrdenadas.forEach(([cidade, qtd]) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span>${cidade}</span> <span class="dash-badge">${qtd}</span>`;
+                    listaCidadesEl.appendChild(li);
+                });
+            }
+        }
+
+        // ================= IMPORTAÇÃO EXCEL / TEXTO COLADO =================
+        function processarPlanilha(e) {
+            const file = e.target.files[0];
+            if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function(evt) {
                 try {
-                    const data = new Uint8Array(e.target.result);
+                    const data = new Uint8Array(evt.target.result);
                     const workbook = XLSX.read(data, {type: 'array'});
                     const firstSheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[firstSheetName];
-                    
-                    const jsonRows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
-                    
-                    if (jsonRows.length <= 1) {
-                        alert("A planilha está vazia ou contém apenas o cabeçalho.");
-                        return;
-                    }
-
-                    // Processa as linhas a partir da linha 1 (ignorando o cabeçalho 0)
-                    for (let i = 1; i < jsonRows.length; i++) {
-                        const row = jsonRows[i];
-                        if (!row || row.length === 0) continue;
-
-                        const nomeCrianca = row[2] || '';
-                        const primeiraLetra = nomeCrianca.trim() ? nomeCrianca.trim().charAt(0).toUpperCase() : 'X';
-                        
-                        // Posição/número da linha na planilha (i)
-                        const numeroLinha = i; 
-
-                        // Gera o padrão exato: Letra + Hífen + Número da linha (Ex: A-1)
-                        const pastaGerada = `${primeiraLetra}-${numeroLinha}`;
-
-                        const novoRegistro = {
-                            pasta: pastaGerada,
-                            numProces: row[1] || '',
-                            crianca: nomeCrianca,
-                            dataNasc: row[3] || '',
-                            responsavel: row[4] || '',
-                            endereco: row[5] || '',
-                            cidade: row[6] || 'Paranoá',
-                            assunto: row[7] || '',
-                            conselheiro: row[8] || '',
-                            processoSei: row[9] || ''
-                        };
-
-                        listaRegistros.push(novoRegistro);
-                    }
-
-                    atualizarTabela();
-                    mostrarStatus(`${listaRegistros.length} registros carregados com sucesso da planilha!`);
-                } catch (error) {
-                    console.error("Erro ao ler o arquivo Excel:", error);
-                    alert("Erro ao processar o arquivo Excel. Verifique se o formato é válido.");
+                    const json = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                    converterEImportarLinhas(json);
+                } catch (err) {
+                    alert("Erro ao ler o arquivo Excel: " + err.message);
                 }
             };
             reader.readAsArrayBuffer(file);
         }
 
-        function atualizarTabela() {
-            const tbody = document.querySelector('#tabelaRegistros tbody');
-            tbody.innerHTML = '';
-
-            if (listaRegistros.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; color: #64748b; padding: 20px;">Nenhum dado cadastrado ainda.</td></tr>';
-                document.getElementById('contadorRegistros').innerText = 'Total: 0 registros';
-                return;
-            }
-
-            listaRegistros.forEach((reg, index) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>${reg.pasta}</strong></td>
-                    <td>${reg.numProces}</td>
-                    <td>${reg.crianca}</td>
-                    <td>${reg.dataNasc}</td>
-                    <td>${reg.responsavel}</td>
-                    <td>${reg.endereco}</td>
-                    <td>${reg.cidade}</td>
-                    <td>${reg.assunto}</td>
-                    <td>${reg.conselheiro}</td>
-                    <td>${reg.processoSei}</td>
-                    <td style="text-align: center;">
-                        <button type="button" class="btn-acao btn-deletar" onclick="removerRegistro(${index})"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            document.getElementById('contadorRegistros').innerText = `Total: ${listaRegistros.length} registros`;
-        }
-
-        function salvarRegistro() {
-            const inputsCrianca = document.querySelectorAll('.nomeCrianca');
-            const criancas = Array.from(inputsCrianca).map(i => i.value.trim()).filter(v => v !== '').join(', ');
-
-            const inputsResp = document.querySelectorAll('.nomeResponsavel');
-            const responsaveis = Array.from(inputsResp).map(i => i.value.trim()).filter(v => v !== '').join(', ');
-
-            const novoRegistro = {
-                pasta: document.getElementById('pasta').value,
-                numProces: document.getElementById('numProces').value,
-                crianca: criancas,
-                dataNasc: document.getElementById('dataNasc').value,
-                responsavel: responsaveis,
-                endereco: document.getElementById('endereco').value,
-                cidade: document.getElementById('cidade').value,
-                assunto: document.getElementById('assuntoInput').value,
-                conselheiro: document.getElementById('conselheiro').value,
-                processoSei: document.getElementById('processoSeiNum').value
-            };
-
-            if (!novoRegistro.crianca) {
-                alert("Por favor, preencha o nome da criança.");
-                return;
-            }
-
-            listaRegistros.push(novoRegistro);
-            atualizarTabela();
-            tentarLimparFormulario();
-            mostrarStatus("Registro cadastrado com sucesso!");
-        }
-
-        function removerRegistro(index) {
-            if (confirm("Deseja realmente excluir este registro?")) {
-                listaRegistros.splice(index, 1);
-                atualizarTabela();
-            }
-        }
-
-        function tentarLimparFormulario() {
-            document.getElementById('processoForm').reset();
-            document.getElementById('pasta').value = '';
-        }
-
-        function mostrarStatus(mensagem) {
-            const box = document.getElementById('statusBox');
-            box.innerText = mensagem;
-            box.style.display = 'block';
+        function processarDadosColados(e) {
             setTimeout(() => {
-                box.style.display = 'none';
-            }, 4000);
+                const texto = document.getElementById('pasteInput').value;
+                if (!texto) return;
+                const linhas = texto.split('\n').map(l => l.split('\t'));
+                converterEImportarLinhas(linhas);
+                document.getElementById('pasteInput').value = '';
+            }, 100);
         }
 
-        function pesquisarProcessos() {
-            const termo = document.getElementById('inputPesquisaProcessos').value.toLowerCase();
-            const linhas = document.querySelectorAll('#tabelaRegistros tbody tr');
-            
-            linhas.forEach(linha => {
-                const textoLinha = linha.innerText.toLowerCase();
-                if (textoLinha.includes(termo)) {
-                    linha.style.display = '';
-                } else {
-                    linha.style.display = 'none';
+        function clicarColar() {
+            const texto = document.getElementById('pasteInput').value;
+            if (!texto) {
+                alert("Cole os dados do Excel na caixa de texto primeiro.");
+                return;
+            }
+            const linhas = texto.split('\n').map(l => l.split('\t'));
+            converterEImportarLinhas(linhas);
+            document.getElementById('pasteInput').value = '';
+        }
+
+        function converterEImportarLinhas(linhas) {
+            let importadosCount = 0;
+            linhas.forEach((cols, idx) => {
+                if (idx === 0 && (cols[0]?.toLowerCase().includes('pasta') || cols[0]?.toLowerCase().includes('nome'))) {
+                    return; // Pular cabeçalho provável
+                }
+                if (cols.length >= 2 && cols[0]?.trim() !== "") {
+                    const novoReg = {
+                        pasta: cols[0]?.trim() || '',
+                        numProces: cols[1]?.trim() || '',
+                        criancas: [cols[2]?.trim() || cols[0]?.trim()],
+                        dataNasc: cols[3]?.trim() || '',
+                        responsaveis: [cols[4]?.trim() || ''],
+                        endereco: cols[5]?.trim() || '',
+                        cidade: cols[6]?.trim() || 'Paranoá',
+                        assunto: cols[7]?.trim() || '',
+                        conselheiro: cols[8]?.trim() || '',
+                        processoSeiNum: cols[9]?.trim() || '',
+                        historicoServicos: []
+                    };
+                    registros.push(novoReg);
+                    importadosCount++;
                 }
             });
+
+            if (importadosCount > 0) {
+                localStorage.setItem('ct_registros', JSON.stringify(registros));
+                atualizarTabela();
+                atualizarDashboardEstatisticas();
+                alert(`${importadosCount} registros importados com sucesso!`);
+            } else {
+                alert("Nenhum registro válido encontrado nos dados informados.");
+            }
         }
     </script>
 </body>
